@@ -6,10 +6,7 @@
     <title>WinesOf PASS - Experiencias gastronómicas y enoturísticas</title>
     <meta name="description" content="Accedé a las mejores bodegas, restaurantes, hoteles y vinotecas de Uruguay con descuentos de 20-30%, 2x1 y cortesías todos los días.">
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
     <style>
@@ -27,37 +24,27 @@
     <div id="app"></div>
 
     <script>
-        // Configuración
         const CONFIG = {
             GOOGLE_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbx6ZaCLU7uEf3Bsj0v6DjN73tocUVHIamdMRH810EKLdlR1VHtrIBMrUyS_vUxZPsm7-w/exec',
             INITIAL_WAITLIST_COUNT: 147
         };
 
-        // State
         let state = {
             scrolled: false,
             showModal: false,
             submitted: false,
             waitlistCount: CONFIG.INITIAL_WAITLIST_COUNT,
-            formData: {
-                name: '',
-                email: '',
-                phone: '',
-                plan: 'semestral'
-            }
+            formData: { name: '', email: '', phone: '', plan: 'semestral' }
         };
 
-        // Funciones de envío
         async function sendToGoogleSheets(data) {
             try {
                 console.log('📤 Enviando a Google Sheets:', data);
                 
-                const response = await fetch(CONFIG.GOOGLE_SCRIPT_URL, {
+                await fetch(CONFIG.GOOGLE_SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         nombre: data.name,
                         email: data.email,
@@ -72,24 +59,17 @@
                 console.log('✅ Datos enviados correctamente');
                 return { success: true };
             } catch (error) {
-                console.error('❌ Error al enviar:', error);
-                return { success: false, error: error.message };
+                console.error('❌ Error:', error);
+                return { success: false };
             }
         }
 
         function trackEvent(eventName, properties = {}) {
-            console.log('📊 Track Event:', eventName, properties);
-            
-            if (typeof gtag !== 'undefined') {
-                gtag('event', eventName, properties);
-            }
-            
-            if (typeof fbq !== 'undefined') {
-                fbq('track', eventName, properties);
-            }
+            console.log('📊 Event:', eventName, properties);
+            if (typeof gtag !== 'undefined') gtag('event', eventName, properties);
+            if (typeof fbq !== 'undefined') fbq('track', eventName, properties);
         }
 
-        // Handlers
         async function handleSubmit() {
             if (!state.formData.name || !state.formData.email) {
                 alert('Por favor completa nombre y email');
@@ -108,10 +88,8 @@
                 phone_provided: !!state.formData.phone
             });
 
-            // Enviar datos
             await sendToGoogleSheets(dataToSave);
 
-            // Mostrar éxito
             state.submitted = true;
             state.waitlistCount++;
             render();
@@ -140,10 +118,8 @@
             state.formData[field] = value;
         }
 
-        // Render
         function render() {
-            const app = document.getElementById('app');
-            app.innerHTML = `
+            document.getElementById('app').innerHTML = `
                 ${state.showModal ? renderModal() : ''}
                 ${state.scrolled ? renderStickyBar() : ''}
                 ${renderNav()}
@@ -151,9 +127,7 @@
                 ${renderCategories()}
                 ${renderROI()}
                 ${renderBenefits()}
-                ${renderTestimonials()}
                 ${renderPricing()}
-                ${renderUrgency()}
                 ${renderFAQ()}
                 ${renderFinalCTA()}
                 ${renderFooter()}
@@ -180,70 +154,40 @@
                             <h3 class="text-3xl font-bold text-white mb-2">Unite a la lista de espera</h3>
                             <p class="text-stone-300">
                                 <span class="text-rose-400 font-bold">${state.waitlistCount} personas</span> ya están esperando.
-                                <br>Anotate para ser de los primeros en la próxima tanda.
                             </p>
                         </div>
 
                         <div class="space-y-4">
                             <div>
                                 <label class="text-stone-300 text-sm font-medium block mb-1">Nombre completo *</label>
-                                <input
-                                    type="text"
-                                    id="input-name"
-                                    placeholder="Juan Pérez"
-                                    class="w-full px-4 py-3 rounded-lg bg-stone-800 text-white border border-stone-700 focus:border-rose-600 focus:outline-none"
-                                    value="${state.formData.name}"
-                                >
+                                <input type="text" id="input-name" placeholder="Juan Pérez" value="${state.formData.name}"
+                                    class="w-full px-4 py-3 rounded-lg bg-stone-800 text-white border border-stone-700 focus:border-rose-600 focus:outline-none">
                             </div>
-
                             <div>
                                 <label class="text-stone-300 text-sm font-medium block mb-1">Email *</label>
-                                <input
-                                    type="email"
-                                    id="input-email"
-                                    placeholder="tu@email.com"
-                                    class="w-full px-4 py-3 rounded-lg bg-stone-800 text-white border border-stone-700 focus:border-rose-600 focus:outline-none"
-                                    value="${state.formData.email}"
-                                >
+                                <input type="email" id="input-email" placeholder="tu@email.com" value="${state.formData.email}"
+                                    class="w-full px-4 py-3 rounded-lg bg-stone-800 text-white border border-stone-700 focus:border-rose-600 focus:outline-none">
                             </div>
-
                             <div>
                                 <label class="text-stone-300 text-sm font-medium block mb-1">Teléfono (opcional)</label>
-                                <input
-                                    type="tel"
-                                    id="input-phone"
-                                    placeholder="099 123 456"
-                                    class="w-full px-4 py-3 rounded-lg bg-stone-800 text-white border border-stone-700 focus:border-rose-600 focus:outline-none"
-                                    value="${state.formData.phone}"
-                                >
+                                <input type="tel" id="input-phone" placeholder="099 123 456" value="${state.formData.phone}"
+                                    class="w-full px-4 py-3 rounded-lg bg-stone-800 text-white border border-stone-700 focus:border-rose-600 focus:outline-none">
                             </div>
-
                             <div>
                                 <label class="text-stone-300 text-sm font-medium block mb-1">Plan de interés</label>
-                                <select
-                                    id="input-plan"
-                                    class="w-full px-4 py-3 rounded-lg bg-stone-800 text-white border border-stone-700 focus:border-rose-600 focus:outline-none"
-                                >
+                                <select id="input-plan" class="w-full px-4 py-3 rounded-lg bg-stone-800 text-white border border-stone-700 focus:border-rose-600 focus:outline-none">
                                     <option value="mensual" ${state.formData.plan === 'mensual' ? 'selected' : ''}>Mensual - $615/mes</option>
                                     <option value="semestral" ${state.formData.plan === 'semestral' ? 'selected' : ''}>Semestral - $3.075 (1 MES GRATIS)</option>
                                     <option value="anual" ${state.formData.plan === 'anual' ? 'selected' : ''}>Anual - $6.150 (2 MESES GRATIS)</option>
                                 </select>
                             </div>
-
-                            <button
-                                onclick="handleSubmit()"
-                                class="w-full bg-gradient-to-r from-rose-700 to-red-700 text-white py-4 rounded-lg font-bold hover:scale-105 transition-transform"
-                            >
+                            <button onclick="handleSubmit()" class="w-full bg-gradient-to-r from-rose-700 to-red-700 text-white py-4 rounded-lg font-bold hover:scale-105 transition-transform">
                                 Asegurar mi lugar
                             </button>
-
-                            <p class="text-stone-400 text-xs text-center">
-                                Te avisaremos por email cuando haya nuevas membresías disponibles
-                            </p>
+                            <p class="text-stone-400 text-xs text-center">Te avisaremos por email cuando haya nuevas membresías</p>
                         </div>
                     </div>
-                </div>
-                `;
+                </div>`;
             } else {
                 return `
                 <div class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
@@ -251,40 +195,31 @@
                         <button onclick="closeModal()" class="absolute top-4 right-4 text-stone-400 hover:text-white">
                             <i data-lucide="x" class="w-6 h-6"></i>
                         </button>
-                        
                         <div class="text-center py-8">
                             <div class="text-6xl mb-4">✅</div>
                             <h3 class="text-2xl font-bold text-white mb-2">¡Estás en la lista!</h3>
-                            <p class="text-stone-300 mb-4">
-                                Sos el número <span class="text-rose-400 font-bold">#${state.waitlistCount}</span> en la fila
-                            </p>
-                            <p class="text-stone-400 text-sm">
-                                Te avisaremos por email cuando liberemos más cupos
-                            </p>
+                            <p class="text-stone-300 mb-4">Sos el número <span class="text-rose-400 font-bold">#${state.waitlistCount}</span> en la fila</p>
+                            <p class="text-stone-400 text-sm">Te avisaremos por email cuando liberemos más cupos</p>
                         </div>
                     </div>
-                </div>
-                `;
+                </div>`;
             }
         }
 
         function renderStickyBar() {
             return `
             <div class="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-rose-700 to-red-700 p-4 z-40 shadow-2xl">
-                <div class="max-w-7xl mx-auto flex items-center justify-between">
-                    <div class="text-white">
+                <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="text-white text-center sm:text-left">
                         <p class="font-bold">🔥 Membresías agotadas - ${state.waitlistCount} personas esperando</p>
                         <p class="text-sm text-orange-100">Próxima tanda: Noviembre 2025</p>
                     </div>
-                    <button 
-                        onclick="openModal('semestral', 'sticky_bar')"
-                        class="bg-white text-rose-700 px-6 py-3 rounded-full font-bold hover:scale-105 transition-transform shadow-lg whitespace-nowrap"
-                    >
+                    <button onclick="openModal('semestral', 'sticky_bar')" 
+                        class="bg-white text-rose-700 px-6 py-3 rounded-full font-bold hover:scale-105 transition-transform shadow-lg whitespace-nowrap">
                         Unirme a la lista
                     </button>
                 </div>
-            </div>
-            `;
+            </div>`;
         }
 
         function renderNav() {
@@ -298,35 +233,30 @@
                         </div>
                         <span class="text-2xl font-bold text-white">WinesOf<span class="text-rose-500">PASS</span></span>
                     </div>
-                    <button 
-                        onclick="openModal('semestral', 'navbar')"
-                        class="bg-gradient-to-r from-rose-700 to-red-700 text-white px-6 py-2.5 rounded-full font-semibold hover:scale-105 transition-transform shadow-lg"
-                    >
+                    <button onclick="openModal('semestral', 'navbar')" 
+                        class="bg-gradient-to-r from-rose-700 to-red-700 text-white px-6 py-2.5 rounded-full font-semibold hover:scale-105 transition-transform shadow-lg">
                         Unirme a la lista
                     </button>
                 </div>
-            </nav>
-            `;
+            </nav>`;
         }
 
         function renderHero() {
             return `
             <section class="pt-32 pb-20 px-4 relative overflow-hidden">
                 <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(190,18,60,0.15),transparent_50%)]"></div>
-                <div class="absolute inset-0 bg-[radial-gradient(circle_at_70%_60%,rgba(225,29,72,0.1),transparent_50%)]"></div>
-                
                 <div class="max-w-5xl mx-auto text-center relative z-10">
                     <div class="inline-flex items-center gap-2 bg-red-500/20 border border-red-500/30 rounded-full px-4 py-2 mb-6 backdrop-blur-sm animate-pulse-soft">
                         <i data-lucide="alert-circle" class="w-4 h-4 text-red-300"></i>
                         <span class="text-red-200 text-sm font-medium">🔥 AGOTADO - ${state.waitlistCount} personas en lista de espera</span>
                     </div>
                     
-                    <h1 class="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+                    <h1 class="text-4xl sm:text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
                         Experiencias gastronómicas<br>y enoturísticas
                         <span class="bg-gradient-to-r from-rose-400 to-red-400 bg-clip-text text-transparent"> sin límites</span>
                     </h1>
                     
-                    <p class="text-xl md:text-2xl text-stone-300 mb-8 max-w-3xl mx-auto">
+                    <p class="text-lg sm:text-xl md:text-2xl text-stone-300 mb-8 max-w-3xl mx-auto">
                         Accedé a las mejores <strong class="text-white">bodegas, restaurantes, hoteles y vinotecas</strong> de Uruguay con <strong class="text-rose-400">descuentos de 20-30%, 2x1 y cortesías</strong> todos los días.
                     </p>
 
@@ -335,73 +265,47 @@
                         <p class="text-stone-300">La próxima tanda se libera en <strong class="text-white">Noviembre 2025</strong></p>
                     </div>
 
-                    <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-                        <button 
-                            onclick="openModal('semestral', 'hero_primary')"
-                            class="bg-gradient-to-r from-rose-700 to-red-700 text-white px-8 py-4 rounded-full font-bold text-lg hover:scale-105 transition-transform shadow-2xl shadow-rose-700/50 flex items-center justify-center gap-2 group"
-                        >
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <button onclick="openModal('semestral', 'hero_primary')" 
+                            class="bg-gradient-to-r from-rose-700 to-red-700 text-white px-8 py-4 rounded-full font-bold text-lg hover:scale-105 transition-transform shadow-2xl shadow-rose-700/50 flex items-center justify-center gap-2 group">
                             Unirme a la lista de espera
                             <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
                         </button>
-                        <button 
-                            onclick="document.getElementById('pricing').scrollIntoView({behavior: 'smooth'})"
-                            class="border-2 border-rose-500 text-rose-400 px-8 py-4 rounded-full font-semibold text-lg hover:bg-rose-950/30 transition-all backdrop-blur-sm"
-                        >
+                        <button onclick="document.getElementById('pricing').scrollIntoView({behavior: 'smooth'})" 
+                            class="border-2 border-rose-500 text-rose-400 px-8 py-4 rounded-full font-semibold text-lg hover:bg-rose-950/30 transition-all backdrop-blur-sm">
                             Ver planes y precios
                         </button>
                     </div>
                 </div>
-            </section>
-            `;
+            </section>`;
         }
 
         function renderCategories() {
+            const categories = [
+                { icon: 'wine', name: 'Bodegas', desc: 'Degustaciones exclusivas', detail: 'Accedé a las bodegas más prestigiosas con 2x1 en degustaciones y 20% OFF', color: 'from-rose-700 to-red-800' },
+                { icon: 'utensils', name: 'Gastronomía', desc: 'Restaurantes gourmet', detail: '20-30% de descuento en menús de autor y cortesías especiales', color: 'from-red-500 to-rose-600' },
+                { icon: 'hotel', name: 'Hotelería', desc: 'Escapadas de ensueño', detail: 'Descuentos en hoteles boutique y experiencias enoturísticas completas', color: 'from-pink-600 to-rose-700' },
+                { icon: 'shopping-bag', name: 'Vinotecas', desc: 'Vinos para llevar', detail: '15-25% OFF en tu vinoteca favorita y acceso a ediciones limitadas', color: 'from-rose-600 to-red-700' }
+            ];
+            
             return `
             <section class="py-16 px-4 bg-neutral-900/30">
                 <div class="max-w-6xl mx-auto">
-                    <h3 class="text-2xl md:text-3xl font-bold text-white text-center mb-3">
-                        Más de 80 experiencias en 4 categorías
-                    </h3>
-                    <p class="text-stone-400 text-center mb-12 max-w-2xl mx-auto">
-                        Desde degustaciones en bodegas boutique hasta cenas en restaurantes de autor
-                    </p>
-                    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <h3 class="text-2xl md:text-3xl font-bold text-white text-center mb-3">Más de 80 experiencias en 4 categorías</h3>
+                    <p class="text-stone-400 text-center mb-12 max-w-2xl mx-auto">Desde degustaciones en bodegas boutique hasta cenas en restaurantes de autor</p>
+                    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        ${categories.map(cat => `
                         <div class="bg-gradient-to-br from-neutral-900 to-stone-900 p-6 rounded-2xl border border-rose-700/20 hover:border-rose-600/50 transition-all hover:scale-105 group">
-                            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-rose-700 to-red-800 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                <i data-lucide="wine" class="w-7 h-7 text-white"></i>
+                            <div class="w-16 h-16 rounded-full bg-gradient-to-br ${cat.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                <i data-lucide="${cat.icon}" class="w-7 h-7 text-white"></i>
                             </div>
-                            <h4 class="text-white font-bold text-xl mb-2">Bodegas</h4>
-                            <p class="text-rose-400 text-sm font-semibold mb-3">Degustaciones exclusivas</p>
-                            <p class="text-stone-400 text-sm leading-relaxed">Accedé a las bodegas más prestigiosas con 2x1 en degustaciones y 20% OFF en compras de vinos premium</p>
-                        </div>
-                        <div class="bg-gradient-to-br from-neutral-900 to-stone-900 p-6 rounded-2xl border border-rose-700/20 hover:border-rose-600/50 transition-all hover:scale-105 group">
-                            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                <i data-lucide="utensils" class="w-7 h-7 text-white"></i>
-                            </div>
-                            <h4 class="text-white font-bold text-xl mb-2">Gastronomía</h4>
-                            <p class="text-rose-400 text-sm font-semibold mb-3">Restaurantes gourmet</p>
-                            <p class="text-stone-400 text-sm leading-relaxed">20-30% de descuento en menús de autor y cortesías especiales en los mejores restaurantes del país</p>
-                        </div>
-                        <div class="bg-gradient-to-br from-neutral-900 to-stone-900 p-6 rounded-2xl border border-rose-700/20 hover:border-rose-600/50 transition-all hover:scale-105 group">
-                            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-pink-600 to-rose-700 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                <i data-lucide="hotel" class="w-7 h-7 text-white"></i>
-                            </div>
-                            <h4 class="text-white font-bold text-xl mb-2">Hotelería</h4>
-                            <p class="text-rose-400 text-sm font-semibold mb-3">Escapadas de ensueño</p>
-                            <p class="text-stone-400 text-sm leading-relaxed">Descuentos en hoteles boutique, bodegas con alojamiento y experiencias enoturísticas completas</p>
-                        </div>
-                        <div class="bg-gradient-to-br from-neutral-900 to-stone-900 p-6 rounded-2xl border border-rose-700/20 hover:border-rose-600/50 transition-all hover:scale-105 group">
-                            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-rose-600 to-red-700 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                <i data-lucide="shopping-bag" class="w-7 h-7 text-white"></i>
-                            </div>
-                            <h4 class="text-white font-bold text-xl mb-2">Vinotecas</h4>
-                            <p class="text-rose-400 text-sm font-semibold mb-3">Vinos para llevar</p>
-                            <p class="text-stone-400 text-sm leading-relaxed">15-25% OFF en tu vinoteca favorita y acceso a ediciones limitadas antes que nadie</p>
-                        </div>
+                            <h4 class="text-white font-bold text-xl mb-2">${cat.name}</h4>
+                            <p class="text-rose-400 text-sm font-semibold mb-3">${cat.desc}</p>
+                            <p class="text-stone-400 text-sm leading-relaxed">${cat.detail}</p>
+                        </div>`).join('')}
                     </div>
                 </div>
-            </section>
-            `;
+            </section>`;
         }
 
         function renderROI() {
@@ -409,9 +313,7 @@
             <section class="py-16 px-4">
                 <div class="max-w-4xl mx-auto">
                     <div class="bg-gradient-to-br from-neutral-900 to-stone-900 rounded-2xl p-8 border-2 border-rose-700/30">
-                        <h3 class="text-2xl md:text-3xl font-bold text-white text-center mb-6">
-                            💰 ¿Por qué se agotó tan rápido?
-                        </h3>
+                        <h3 class="text-2xl md:text-3xl font-bold text-white text-center mb-6">💰 ¿Por qué se agotó tan rápido?</h3>
                         <div class="grid md:grid-cols-2 gap-6 mb-6">
                             <div class="bg-stone-800/50 rounded-xl p-6">
                                 <p class="text-stone-300 mb-2">Sin WinesOf PASS:</p>
@@ -425,61 +327,179 @@
                             </div>
                         </div>
                         <div class="text-center bg-gradient-to-r from-rose-700 to-red-700 rounded-xl p-6">
-                            <p class="text-white text-2xl font-bold">
-                                ✨ Ahorrás $8.000/mes = $96.000/año
-                            </p>
+                            <p class="text-white text-2xl font-bold">✨ Ahorrás $8.000/mes = $96.000/año</p>
                             <p class="text-rose-100 mt-2">El PASS se paga solo en la primera salida</p>
                         </div>
                     </div>
                 </div>
-            </section>
-            `;
+            </section>`;
         }
 
         function renderBenefits() {
             return `
             <section class="py-20 px-4 bg-neutral-900/30">
                 <div class="max-w-6xl mx-auto">
-                    <h2 class="text-3xl md:text-4xl font-bold text-white text-center mb-12">
-                        ¿Por qué más de 2.400 personas eligen WinesOf PASS?
-                    </h2>
-                    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <div class="bg-gradient-to-br from-neutral-900/80 to-stone-900/80 p-6 rounded-2xl border border-rose-700/20 hover:border-rose-600/50 transition-all hover:scale-105 backdrop-blur-sm">
-                            <i data-lucide="wine" class="w-8 h-8 text-rose-500 mb-4"></i>
-                            <h3 class="text-white font-semibold text-lg mb-2">Más de 80 experiencias</h3>
-                            <p class="text-rose-400 font-medium">vino, gastronomía y más</p>
-                        </div>
-                        <div class="bg-gradient-to-br from-neutral-900/80 to-stone-900/80 p-6 rounded-2xl border border-rose-700/20 hover:border-rose-600/50 transition-all hover:scale-105 backdrop-blur-sm">
-                            <i data-lucide="utensils" class="w-8 h-8 text-rose-500 mb-4"></i>
-                            <h3 class="text-white font-semibold text-lg mb-2">20-30% de descuento</h3>
-                            <p class="text-rose-400 font-medium">en restaurantes premium</p>
-                        </div>
-                        <div class="bg-gradient-to-br from-neutral-900/80 to-stone-900/80 p-6 rounded-2xl border border-rose-700/20 hover:border-rose-600/50 transition-all hover:scale-105 backdrop-blur-sm">
-                            <i data-lucide="hotel" class="w-8 h-8 text-rose-500 mb-4"></i>
-                            <h3 class="text-white font-semibold text-lg mb-2">Beneficios en hoteles</h3>
-                            <p class="text-rose-400 font-medium">escapadas exclusivas</p>
-                        </div>
-                        <div class="bg-gradient-to-br from-neutral-900/80 to-stone-900/80 p-6 rounded-2xl border border-rose-700/20 hover:border-rose-600/50 transition-all hover:scale-105 backdrop-blur-sm">
-                            <i data-lucide="gift" class="w-8 h-8 text-rose-500 mb-4"></i>
-                            <h3 class="text-white font-semibold text-lg mb-2">2x1 y cortesías</h3>
-                            <p class="text-rose-400 font-medium">al consumir en locales</p>
-                        </div>
+                    <h2 class="text-3xl md:text-4xl font-bold text-white text-center mb-12">¿Por qué más de 2.400 personas eligen WinesOf PASS?</h2>
+                    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        ${[
+                            { icon: 'wine', text: 'Más de 80 experiencias', highlight: 'vino, gastronomía y más' },
+                            { icon: 'utensils', text: '20-30% de descuento', highlight: 'en restaurantes premium' },
+                            { icon: 'hotel', text: 'Beneficios en hoteles', highlight: 'escapadas exclusivas' },
+                            { icon: 'gift', text: '2x1 y cortesías', highlight: 'al consumir en locales' }
+                        ].map(b => `
+                        <div class="bg-gradient-to-br from-neutral-900/80 to-stone-900/80 p-6 rounded-2xl border border-rose-700/20 hover:border-rose-600/50 transition-all hover:scale-105">
+                            <i data-lucide="${b.icon}" class="w-8 h-8 text-rose-500 mb-4"></i>
+                            <h3 class="text-white font-semibold text-lg mb-2">${b.text}</h3>
+                            <p class="text-rose-400 font-medium">${b.highlight}</p>
+                        </div>`).join('')}
                     </div>
                 </div>
-            </section>
-            `;
+            </section>`;
         }
 
-        function renderTestimonials() {
+        function renderPricing() {
+            const plans = [
+                { name: 'Mensual', price: '615', period: '/mes', popular: false, savings: 'Probá sin compromiso', features: ['Todos los descuentos', 'Sin permanencia', 'Acceso inmediato', 'App móvil'], value: 'mensual' },
+                { name: 'Semestral', price: '3.075', originalPrice: '3.690', period: '/6 meses', popular: true, savings: '1 mes GRATIS - Ahorrás $615', discount: '1 MES GRATIS', features: ['Todos los descuentos', 'Evento exclusivo', 'Prioridad reservas', 'App móvil', 'Regalo bienvenida'], value: 'semestral' },
+                { name: 'Anual', price: '6.150', originalPrice: '7.380', period: '/año', popular: false, savings: '2 meses GRATIS - Ahorrás $1.230', discount: '2 MESES GRATIS', features: ['Todos los descuentos', '3 eventos exclusivos', 'Máxima prioridad', 'App móvil', 'Pack premium', 'Upgrades gratis'], value: 'anual' }
+            ];
+            
             return `
-            <section class="py-20 px-4">
-                <div class="max-w-4xl mx-auto">
-                    <h2 class="text-3xl md:text-4xl font-bold text-white text-center mb-12">
-                        Lo que dicen nuestros miembros actuales
-                    </h2>
-                    <div class="bg-gradient-to-br from-neutral-900/80 to-stone-900/80 p-8 rounded-2xl border border-rose-700/30 backdrop-blur-sm text-center">
-                        <div class="flex justify-center gap-1 mb-4">
-                            <i data-lucide="star" class="w-5 h-5 text-yellow-500 fill-yellow-500"></i>
-                            <i data-lucide="star" class="w-5 h-5 text-yellow-500 fill-yellow-500"></i>
-                            <i data-lucide="star" class="w-5 h-5 text-yellow-500 fill-yellow-500"></i>
-                            <i data-lucide="
+            <section id="pricing" class="py-20 px-4 bg-neutral-900/30">
+                <div class="max-w-6xl mx-auto">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white text-center mb-4">Planes disponibles en Noviembre 2025</h2>
+                    <p class="text-stone-300 text-center mb-12 text-lg">Asegurá tu lugar ahora. Los precios podrían aumentar en la próxima tanda.</p>
+                    <div class="grid md:grid-cols-3 gap-8">
+                        ${plans.map(plan => `
+                        <div class="relative bg-gradient-to-br from-neutral-900/80 to-stone-900/80 p-8 rounded-2xl border-2 ${plan.popular ? 'border-rose-600 shadow-2xl shadow-rose-700/30' : 'border-stone-700'} transition-all hover:scale-105">
+                            ${plan.popular ? '<div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-rose-700 to-red-700 text-white px-4 py-1 rounded-full text-sm font-bold">MÁS ELEGIDO</div>' : ''}
+                            ${plan.discount ? `<div class="absolute -top-4 -right-4 bg-green-600 text-white px-3 py-1 rounded-full text-xs font-bold rotate-12">${plan.discount}</div>` : ''}
+                            <div class="absolute top-4 right-4">
+                                <div class="bg-red-500/20 border border-red-500/30 rounded-full px-2 py-1">
+                                    <span class="text-red-300 text-xs font-bold">AGOTADO</span>
+                                </div>
+                            </div>
+                            <h3 class="text-2xl font-bold text-white mb-2">${plan.name}</h3>
+                            <div class="mb-4">
+                                <span class="text-5xl font-bold text-white">$${plan.price}</span>
+                                <span class="text-stone-400">${plan.period}</span>
+                                ${plan.originalPrice ? `<div class="mt-1"><span class="text-stone-500 line-through text-sm">$${plan.originalPrice}</span></div>` : ''}
+                            </div>
+                            <div class="bg-rose-700/20 border border-rose-600/30 rounded-lg px-3 py-2 mb-6">
+                                <p class="text-rose-300 font-semibold text-sm">${plan.savings}</p>
+                            </div>
+                            <ul class="space-y-3 mb-8">
+                                ${plan.features.map(f => `
+                                <li class="flex items-start gap-2 text-stone-300">
+                                    <i data-lucide="check" class="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5"></i>
+                                    <span>${f}</span>
+                                </li>`).join('')}
+                            </ul>
+                            <button onclick="openModal('${plan.value}', 'pricing')" 
+                                class="w-full py-3 rounded-xl font-bold transition-all ${plan.popular ? 'bg-gradient-to-r from-rose-700 to-red-700 text-white hover:scale-105 shadow-lg shadow-rose-700/50' : 'bg-stone-700 text-white hover:bg-stone-600'}">
+                                Reservar ${plan.name}
+                            </button>
+                        </div>`).join('')}
+                    </div>
+                    <div class="mt-12 text-center bg-stone-800/50 rounded-xl p-6 border border-rose-700/20">
+                        <p class="text-white text-lg font-semibold mb-2">✅ Precio bloqueado</p>
+                        <p class="text-stone-300">Al unirte a la lista, garantizamos estos precios para tu primera compra</p>
+                    </div>
+                </div>
+            </section>`;
+        }
+
+        function renderFAQ() {
+            const faqs = [
+                { q: '¿Cuándo hay nuevas membresías?', a: 'Liberamos tandas limitadas cada mes. La próxima es en Noviembre 2025. Al unirte a la lista, te avisamos 24hs antes del lanzamiento.' },
+                { q: '¿Por qué se limitan las membresías?', a: 'Para garantizar la mejor experiencia en cada establecimiento. No queremos saturar los lugares y mantener la exclusividad.' },
+                { q: '¿Qué tipo de beneficios incluye?', a: '2x1 en copas y botellas, 20-30% de descuento en menús, cortesías al consumir, y acceso a eventos exclusivos en bodegas y restaurantes.' },
+                { q: '¿Dónde puedo usar el PASS?', a: 'En más de 80 experiencias: bodegas, restaurantes gourmet, hoteles boutique y vinotecas premium en todo Uruguay.' },
+                { q: '¿Puedo cancelar cuando quiera?', a: 'Sí, sin permanencia. Cancelás desde la app cuando quieras, sin preguntas ni penalizaciones.' }
+            ];
+            
+            return `
+            <section class="py-20 px-4 bg-neutral-900/30">
+                <div class="max-w-3xl mx-auto">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white text-center mb-12">Preguntas frecuentes</h2>
+                    <div class="space-y-4">
+                        ${faqs.map((faq, i) => `
+                        <details class="bg-stone-800/50 rounded-xl p-6 border border-stone-700 hover:border-rose-600/50 transition-all">
+                            <summary class="text-white font-semibold cursor-pointer">${faq.q}</summary>
+                            <p class="text-stone-300 mt-3">${faq.a}</p>
+                        </details>`).join('')}
+                    </div>
+                </div>
+            </section>`;
+        }
+
+        function renderFinalCTA() {
+            return `
+            <section class="py-20 px-4 relative overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-r from-rose-900/30 to-red-900/30"></div>
+                <div class="max-w-4xl mx-auto text-center relative z-10">
+                    <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">¿Listo para ser parte de la próxima tanda?</h2>
+                    <p class="text-xl text-stone-300 mb-8">
+                        <strong class="text-white">${state.waitlistCount}+ personas</strong> ya están esperando su lugar
+                    </p>
+                    <button onclick="openModal('semestral', 'final_cta')" 
+                        class="bg-gradient-to-r from-rose-700 to-red-700 text-white px-12 py-5 rounded-full font-bold text-xl hover:scale-105 transition-transform shadow-2xl shadow-rose-700/50">
+                        Asegurar mi lugar ahora 🍷
+                    </button>
+                    <p class="text-stone-400 mt-6 text-sm">✓ Notificación prioritaria · ✓ Precio bloqueado · ✓ Bonus exclusivo</p>
+                </div>
+            </section>`;
+        }
+
+        function renderFooter() {
+            return `
+            <footer class="bg-neutral-950 py-8 px-4 border-t border-stone-800">
+                <div class="max-w-6xl mx-auto text-center text-stone-400 text-sm">
+                    <p>© 2025 WinesOf PASS · Todos los derechos reservados</p>
+                </div>
+            </footer>`;
+        }
+
+        function attachEventListeners() {
+            const nameInput = document.getElementById('input-name');
+            const emailInput = document.getElementById('input-email');
+            const phoneInput = document.getElementById('input-phone');
+            const planInput = document.getElementById('input-plan');
+
+            if (nameInput) nameInput.addEventListener('input', (e) => updateFormData('name', e.target.value));
+            if (emailInput) emailInput.addEventListener('input', (e) => updateFormData('email', e.target.value));
+            if (phoneInput) phoneInput.addEventListener('input', (e) => updateFormData('phone', e.target.value));
+            if (planInput) planInput.addEventListener('change', (e) => updateFormData('plan', e.target.value));
+
+            if (nameInput || emailInput) {
+                [nameInput, emailInput].forEach(input => {
+                    if (input) {
+                        input.addEventListener('keypress', (e) => {
+                            if (e.key === 'Enter') handleSubmit();
+                        });
+                    }
+                });
+            }
+        }
+
+        window.addEventListener('scroll', () => {
+            const newScrolled = window.scrollY > 50;
+            if (newScrolled !== state.scrolled) {
+                state.scrolled = newScrolled;
+                render();
+            }
+        });
+
+        setInterval(() => {
+            if (Math.random() > 0.7) {
+                state.waitlistCount++;
+                if (state.scrolled || document.querySelector('.animate-pulse-soft')) {
+                    render();
+                }
+            }
+        }, 45000);
+
+        render();
+    </script>
+</body>
+</html>
