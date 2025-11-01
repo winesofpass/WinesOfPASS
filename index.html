@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WinesOf PASS - Experiencias gastronómicas y enoturísticas</title>
-    <meta name="description" content="Accedé a las mejores bodegas, restaurantes, hoteles y vinotecas de Uruguay con descuentos de 20-30%, 2x1 y cortesías todos los días.">
+    <meta name="description" content="Accedé a las mejores bodegas, restaurantes, hoteles y vinotecas de Uruguay con descuentos de 20-30%, 2x1 y cortesías.">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -29,7 +29,7 @@
             INITIAL_WAITLIST_COUNT: 147
         };
 
-        let state = {
+        const state = {
             scrolled: false,
             showModal: false,
             submitted: false,
@@ -48,13 +48,12 @@
                 state.currency = state.isUruguay ? '$' : 'USD';
                 console.log('País detectado:', data.country_code);
             } catch (error) {
-                console.log('No se pudo detectar país, asumiendo Uruguay');
+                console.log('No se pudo detectar país');
             }
         }
 
         async function sendToGoogleSheets(data) {
             try {
-                console.log('Enviando a Google Sheets:', data);
                 await fetch(CONFIG.GOOGLE_SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
@@ -69,16 +68,14 @@
                         source: data.source
                     })
                 });
-                console.log('Datos enviados correctamente');
                 return { success: true };
             } catch (error) {
-                console.error('Error:', error);
                 return { success: false };
             }
         }
 
         function trackEvent(eventName, properties = {}) {
-            console.log('Track Event:', eventName, properties);
+            console.log('Event:', eventName, properties);
             if (typeof gtag !== 'undefined') gtag('event', eventName, properties);
             if (typeof fbq !== 'undefined') fbq('track', eventName, properties);
         }
@@ -89,7 +86,7 @@
             const phoneInput = document.getElementById('input-phone');
             const planInput = document.getElementById('input-plan');
             
-            if (!nameInput.value || !emailInput.value) {
+            if (!nameInput || !emailInput || !nameInput.value || !emailInput.value) {
                 alert('Por favor completa nombre y email');
                 return;
             }
@@ -97,8 +94,8 @@
             const dataToSave = {
                 name: nameInput.value,
                 email: emailInput.value,
-                phone: phoneInput.value,
-                plan: planInput.value,
+                phone: phoneInput?.value || '',
+                plan: planInput?.value || 'semestral',
                 timestamp: new Date().toISOString(),
                 waitlistPosition: state.waitlistCount + 1,
                 source: 'landing_page'
@@ -113,58 +110,40 @@
 
             state.submitted = true;
             state.waitlistCount++;
-            render();
-
-            setTimeout(() => {
-                state.showModal = false;
-                state.submitted = false;
-                render();
-            }, 3000);
-        }
-
-        function openModal(plan = 'semestral', location = 'default') {
-            trackEvent('waitlist_opened', { plan, location });
-            state.showModal = true;
-            render();
-        }
-
-        function closeModal() {
-            state.showModal = false;
-            state.submitted = false;
-            render();
-        }
-
-        function render() {
-            const app = document.getElementById('app');
-            app.innerHTML = [
-                state.showModal ? renderModal() : '',
-                state.scrolled ? renderStickyBar() : '',
-                renderNav(),
-                renderHero(),
-                renderCategories(),
-                renderROI(),
-                renderTestimonials(),
-                renderBenefits(),
-                renderPricing(),
-                renderFAQ(),
-                renderFinalCTA(),
-                renderFooter()
-            ].join('');
-
-            lucide.createIcons();
-        }
-
-        function renderModal() {
-            if (!state.submitted) {
-                const c = state.currency;
-                const p1 = state.isUruguay ? '615' : '15';
-                const p2 = state.isUruguay ? '3.075' : '75';
-                const p3 = state.isUruguay ? '6.150' : '150';
+            
+            const modal = document.querySelector('.modal-content');
+            if (modal) {
+                modal.innerHTML = `
+                    <button class="close-modal absolute top-4 right-4 text-stone-400 hover:text-white">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                    <div class="text-center py-8">
+                        <div class="text-6xl mb-4">✅</div>
+                        <h3 class="text-2xl font-bold text-white mb-2">¡Estás en la lista!</h3>
+                        <p class="text-stone-300 mb-4">Sos el número <span class="text-rose-400 font-bold">#${state.waitlistCount}</span> en la fila</p>
+                        <p class="text-stone-400 text-sm">Te avisaremos por email cuando liberemos más cupos</p>
+                    </div>
+                `;
+                lucide.createIcons();
                 
-                return `
-                <div class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onclick="if(event.target === event.currentTarget) closeModal()">
-                    <div class="bg-gradient-to-br from-neutral-900 to-stone-900 rounded-2xl p-8 max-w-md w-full border-2 border-rose-700/50 relative" onclick="event.stopPropagation()">
-                        <button onclick="closeModal()" class="absolute top-4 right-4 text-stone-400 hover:text-white">
+                setTimeout(() => {
+                    closeModal();
+                }, 3000);
+            }
+        }
+
+        function openModal(plan = 'semestral') {
+            state.showModal = true;
+            
+            const c = state.currency;
+            const p1 = state.isUruguay ? '615' : '15';
+            const p2 = state.isUruguay ? '3.075' : '75';
+            const p3 = state.isUruguay ? '6.150' : '150';
+            
+            const modalHTML = `
+                <div class="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                    <div class="modal-content bg-gradient-to-br from-neutral-900 to-stone-900 rounded-2xl p-8 max-w-md w-full border-2 border-rose-700/50 relative">
+                        <button class="close-modal absolute top-4 right-4 text-stone-400 hover:text-white">
                             <i data-lucide="x" class="w-6 h-6"></i>
                         </button>
                         
@@ -173,13 +152,13 @@
                                 <i data-lucide="alert-circle" class="w-4 h-4 text-red-400"></i>
                                 <span class="text-red-300 text-sm font-medium">Membresías agotadas</span>
                             </div>
-                            <h3 class="text-3xl font-bold text-white mb-2">Unite a la lista de espera</h3>
+                            <h3 class="text-3xl font-bold text-white mb-2">Unite a la lista exclusiva</h3>
                             <p class="text-stone-300">
-                                <span class="text-rose-400 font-bold">${state.waitlistCount} personas</span> ya están esperando.
+                                <span class="text-rose-400 font-bold">${state.waitlistCount} personas</span> esperando acceso a la lista secreta de descuentos.
                             </p>
                         </div>
 
-                        <form onsubmit="event.preventDefault(); handleSubmit();" class="space-y-4">
+                        <form class="waitlist-form space-y-4">
                             <div>
                                 <label class="text-stone-300 text-sm font-medium block mb-1">Nombre completo *</label>
                                 <input type="text" id="input-name" placeholder="Juan Pérez" required
@@ -199,256 +178,62 @@
                                 <label class="text-stone-300 text-sm font-medium block mb-1">Plan de interés</label>
                                 <select id="input-plan" class="w-full px-4 py-3 rounded-lg bg-stone-800 text-white border border-stone-700 focus:border-rose-600 focus:outline-none">
                                     <option value="mensual">Mensual - ${c}${p1}/mes</option>
-                                    <option value="semestral" selected>Semestral - ${c}${p2} (1 MES GRATIS)</option>
-                                    <option value="anual">Anual - ${c}${p3} (2 MESES GRATIS)</option>
+                                    <option value="semestral" ${plan === 'semestral' ? 'selected' : ''}>Semestral - ${c}${p2} (1 MES GRATIS)</option>
+                                    <option value="anual" ${plan === 'anual' ? 'selected' : ''}>Anual - ${c}${p3} (2 MESES GRATIS)</option>
                                 </select>
                             </div>
                             <button type="submit" class="w-full bg-gradient-to-r from-rose-700 to-red-700 text-white py-4 rounded-lg font-bold hover:scale-105 transition-transform">
-                                Asegurar mi lugar
+                                Asegurar mi lugar en la lista
                             </button>
-                            <p class="text-stone-400 text-xs text-center">Te avisaremos por email cuando haya nuevas membresías</p>
+                            <p class="text-stone-400 text-xs text-center">🔒 Lista exclusiva: Acceso anticipado a nuevos beneficios y sorteos mensuales</p>
                         </form>
                     </div>
-                </div>`;
-            } else {
-                return `
-                <div class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                    <div class="bg-gradient-to-br from-neutral-900 to-stone-900 rounded-2xl p-8 max-w-md w-full border-2 border-rose-700/50 relative">
-                        <button onclick="closeModal()" class="absolute top-4 right-4 text-stone-400 hover:text-white">
-                            <i data-lucide="x" class="w-6 h-6"></i>
-                        </button>
-                        <div class="text-center py-8">
-                            <div class="text-6xl mb-4">✅</div>
-                            <h3 class="text-2xl font-bold text-white mb-2">¡Estás en la lista!</h3>
-                            <p class="text-stone-300 mb-4">Sos el número <span class="text-rose-400 font-bold">#${state.waitlistCount}</span> en la fila</p>
-                            <p class="text-stone-400 text-sm">Te avisaremos por email cuando liberemos más cupos</p>
-                        </div>
-                    </div>
-                </div>`;
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            lucide.createIcons();
+        }
+
+        function closeModal() {
+            state.showModal = false;
+            state.submitted = false;
+            const modal = document.querySelector('.modal-backdrop');
+            if (modal) modal.remove();
+        }
+
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.close-modal') || e.target.classList.contains('modal-backdrop')) {
+                closeModal();
             }
-        }
-
-        function renderStickyBar() {
-            return `
-            <div class="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-rose-700 to-red-700 p-4 z-40 shadow-2xl">
-                <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div class="text-white text-center sm:text-left">
-                        <p class="font-bold">🔥 Membresías agotadas - ${state.waitlistCount} personas esperando</p>
-                        <p class="text-sm text-orange-100">Próxima tanda: Noviembre 2025</p>
-                    </div>
-                    <button onclick="openModal('semestral', 'sticky_bar')" 
-                        class="bg-white text-rose-700 px-6 py-3 rounded-full font-bold hover:scale-105 transition-transform shadow-lg whitespace-nowrap">
-                        Unirme a la lista
-                    </button>
-                </div>
-            </div>`;
-        }
-
-        function renderNav() {
-            return `
-            <nav class="fixed top-0 w-full z-50 transition-all duration-300 ${state.scrolled ? 'bg-neutral-950/95 backdrop-blur-lg shadow-xl' : 'bg-transparent'}">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-                    <div class="flex items-center gap-3">
-                        <div class="relative w-10 h-10">
-                            <div class="absolute inset-0 bg-gradient-to-br from-rose-700 to-red-800 rounded-full opacity-20"></div>
-                            <i data-lucide="map-pin" class="absolute inset-0 m-auto text-rose-600 w-6 h-6"></i>
-                        </div>
-                        <span class="text-2xl font-bold text-white">WinesOf<span class="text-rose-500">PASS</span></span>
-                    </div>
-                    <button onclick="openModal('semestral', 'navbar')" 
-                        class="bg-gradient-to-r from-rose-700 to-red-700 text-white px-6 py-2.5 rounded-full font-semibold hover:scale-105 transition-transform shadow-lg">
-                        Unirme a la lista
-                    </button>
-                </div>
-            </nav>`;
-        }
-
-        function renderHero() {
-            const loc = state.isUruguay ? 'de Uruguay' : 'en Uruguay';
-            const when = state.isUruguay ? 'todos los días' : 'durante tu estadía';
             
-            return `
-            <section class="pt-32 pb-20 px-4 relative overflow-hidden">
-                <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(190,18,60,0.15),transparent_50%)]"></div>
-                <div class="max-w-5xl mx-auto text-center relative z-10">
-                    <div class="inline-flex items-center gap-2 bg-red-500/20 border border-red-500/30 rounded-full px-4 py-2 mb-6 backdrop-blur-sm animate-pulse-soft">
-                        <i data-lucide="alert-circle" class="w-4 h-4 text-red-300"></i>
-                        <span class="text-red-200 text-sm font-medium">🔥 AGOTADO - ${state.waitlistCount} personas en lista de espera</span>
-                    </div>
-                    
-                    <h1 class="text-4xl sm:text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-                        Experiencias gastronómicas<br>y enoturísticas
-                        <span class="bg-gradient-to-r from-rose-400 to-red-400 bg-clip-text text-transparent"> sin límites</span>
-                    </h1>
-                    
-                    <p class="text-lg sm:text-xl md:text-2xl text-stone-300 mb-8 max-w-3xl mx-auto">
-                        Accedé a las mejores <strong class="text-white">bodegas, restaurantes, hoteles y vinotecas</strong> ${loc} con <strong class="text-rose-400">descuentos de 20-30%, 2x1 y cortesías</strong> ${when}.
-                    </p>
-
-                    <div class="bg-stone-900/50 border-2 border-red-500/50 rounded-2xl p-6 mb-8 max-w-2xl mx-auto backdrop-blur-sm">
-                        <p class="text-red-400 font-bold text-lg mb-2">⚠️ Todas las membresías de Octubre están vendidas</p>
-                        <p class="text-stone-300">La próxima tanda se libera en <strong class="text-white">Noviembre 2025</strong></p>
-                    </div>
-
-                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                        <button onclick="openModal('semestral', 'hero_primary')" 
-                            class="bg-gradient-to-r from-rose-700 to-red-700 text-white px-8 py-4 rounded-full font-bold text-lg hover:scale-105 transition-transform shadow-2xl shadow-rose-700/50 flex items-center justify-center gap-2 group">
-                            Unirme a la lista de espera
-                            <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
-                        </button>
-                        <button onclick="document.getElementById('pricing').scrollIntoView({behavior: 'smooth'})" 
-                            class="border-2 border-rose-500 text-rose-400 px-8 py-4 rounded-full font-semibold text-lg hover:bg-rose-950/30 transition-all backdrop-blur-sm">
-                            Ver planes y precios
-                        </button>
-                    </div>
-                </div>
-            </section>`;
-        }
-
-        function renderCategories() {
-            const cats = [
-                { icon: 'wine', name: 'Bodegas', desc: 'Degustaciones exclusivas', detail: 'Accedé a las bodegas más prestigiosas con 2x1 en degustaciones y 20% OFF', color: 'from-rose-700 to-red-800' },
-                { icon: 'utensils', name: 'Gastronomía', desc: 'Restaurantes gourmet', detail: '20-30% de descuento en menús de autor y cortesías especiales', color: 'from-red-500 to-rose-600' },
-                { icon: 'hotel', name: 'Hotelería', desc: 'Escapadas de ensueño', detail: 'Descuentos en hoteles boutique y experiencias enoturísticas completas', color: 'from-pink-600 to-rose-700' },
-                { icon: 'shopping-bag', name: 'Vinotecas', desc: 'Vinos para llevar', detail: '15-25% OFF en tu vinoteca favorita y acceso a ediciones limitadas', color: 'from-rose-600 to-red-700' }
-            ];
+            if (e.target.closest('.open-modal')) {
+                const btn = e.target.closest('.open-modal');
+                const plan = btn.dataset.plan || 'semestral';
+                trackEvent('waitlist_opened', { plan, location: btn.dataset.location });
+                openModal(plan);
+            }
             
-            return `
-            <section class="py-16 px-4 bg-neutral-900/30">
-                <div class="max-w-6xl mx-auto">
-                    <h3 class="text-2xl md:text-3xl font-bold text-white text-center mb-3">Más de 80 experiencias en 4 categorías</h3>
-                    <p class="text-stone-400 text-center mb-12 max-w-2xl mx-auto">Desde degustaciones en bodegas boutique hasta cenas en restaurantes de autor</p>
-                    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        ${cats.map(cat => `
-                        <div class="bg-gradient-to-br from-neutral-900 to-stone-900 p-6 rounded-2xl border border-rose-700/20 hover:border-rose-600/50 transition-all hover:scale-105 group">
-                            <div class="w-16 h-16 rounded-full bg-gradient-to-br ${cat.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                <i data-lucide="${cat.icon}" class="w-7 h-7 text-white"></i>
-                            </div>
-                            <h4 class="text-white font-bold text-xl mb-2">${cat.name}</h4>
-                            <p class="text-rose-400 text-sm font-semibold mb-3">${cat.desc}</p>
-                            <p class="text-stone-400 text-sm leading-relaxed">${cat.detail}</p>
-                        </div>`).join('')}
-                    </div>
-                </div>
-            </section>`;
-        }
+            if (e.target.closest('.scroll-pricing')) {
+                document.getElementById('pricing')?.scrollIntoView({behavior: 'smooth'});
+            }
+        });
 
-        function renderROI() {
-            const c = state.currency;
-            const pr = state.isUruguay ? '2.500' : '60';
-            const pw = state.isUruguay ? '1.500' : '35';
-            const mt = state.isUruguay ? '10.000' : '240';
-            const mw = state.isUruguay ? '6.000' : '140';
-            const ms = state.isUruguay ? '4.000' : '100';
-            const ys = state.isUruguay ? '48.000' : '1.200';
+        document.addEventListener('submit', function(e) {
+            if (e.target.classList.contains('waitlist-form')) {
+                e.preventDefault();
+                handleSubmit();
+            }
+        });
+
+        function init() {
+            const app = document.getElementById('app');
             
-            return `
-            <section class="py-16 px-4">
-                <div class="max-w-4xl mx-auto">
-                    <div class="bg-gradient-to-br from-neutral-900 to-stone-900 rounded-2xl p-8 border-2 border-rose-700/30">
-                        <h3 class="text-2xl md:text-3xl font-bold text-white text-center mb-6">💰 ¿Por qué se agotó tan rápido?</h3>
-                        <div class="grid md:grid-cols-2 gap-6 mb-6">
-                            <div class="bg-stone-800/50 rounded-xl p-6">
-                                <p class="text-stone-300 mb-2">Sin WinesOf PASS:</p>
-                                <p class="text-white text-lg">1 salida/semana × ${c}${pr} promedio</p>
-                                <p class="text-3xl font-bold text-red-400 mt-2">= ${c}${mt}/mes</p>
-                            </div>
-                            <div class="bg-stone-800/50 rounded-xl p-6 border-2 border-rose-700">
-                                <p class="text-stone-300 mb-2">Con WinesOf PASS:</p>
-                                <p class="text-white text-lg">1 salida/semana × ${c}${pw} (con descuentos)</p>
-                                <p class="text-3xl font-bold text-green-400 mt-2">= ${c}${mw}/mes</p>
-                            </div>
-                        </div>
-                        <div class="text-center bg-gradient-to-r from-rose-700 to-red-700 rounded-xl p-6">
-                            <p class="text-white text-2xl font-bold">✨ Ahorrás ${c}${ms}/mes = ${c}${ys}/año</p>
-                            <p class="text-rose-100 mt-2">El PASS se paga solo en 2 salidas. A mayor frecuencia, mayor ahorro.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>`;
-        }
-
-        function renderTestimonials() {
-            const testimonials = [
-                { name: "Carolina M.", role: "Foodie & Content Creator", text: "Como creadora de contenido gastronómico, visito restaurantes constantemente. Antes gastaba fortunas. Ahora con el PASS ceno en los mejores lugares y además ahorro para viajes.", highlight: "Ahorro real: $6.500/mes", avatar: "🍽️" },
-                { name: "Rodrigo P.", role: "Sommelier", text: "Pensé que los descuentos eran solo para vinos básicos. Me sorprendí cuando pude acceder a degustaciones premium de bodegas boutique con 2x1. Amplió mi red profesional.", highlight: "Acceso a bodegas exclusivas", avatar: "🍷" },
-                { name: "Lucía & Martín", role: "Pareja joven sin tarjeta", text: "No tenemos tarjetas de crédito pero queremos salir bien. El PASS nos cambió la vida: pagamos una vez al mes y disfrutamos sin culpa. Ya fuimos a 8 lugares este mes.", highlight: "Sin depender de crédito", avatar: "💑" },
-                { name: "Paula S.", role: "Emprendedora", text: "Uso el PASS para reuniones de negocio. Mis clientes quedan impresionados con los lugares, yo ahorro en gastos de representación. Win-win total.", highlight: "Networking inteligente", avatar: "💼" },
-                { name: "Diego R.", role: "Dueño de Restaurante", text: "Al principio dudé, pero WinesOf PASS me trajo clientes nuevos que nunca hubieran entrado. Muchos vuelven sin el descuento. Es fidelización real, no descuentos vacíos.", highlight: "150+ clientes nuevos/mes", avatar: "👨‍🍳" },
-                { name: "Fernanda L.", role: "Mamá de 2", text: "Con dos niños, salir es un lujo. El PASS nos permite una cita mensual en lugares lindos sin que duela el bolsillo. Lo mejor: también hay opciones para ir en familia.", highlight: "Calidad de vida", avatar: "👨‍👩‍👧‍👦" }
-            ];
-
-            const current = testimonials[state.activeTestimonial];
-
-            return `
-            <section class="py-20 px-4">
-                <div class="max-w-5xl mx-auto">
-                    <h2 class="text-3xl md:text-4xl font-bold text-white text-center mb-4">Historias reales de nuestros miembros</h2>
-                    <p class="text-stone-400 text-center mb-12">Diferentes perfiles, mismo resultado: más experiencias, menos gasto</p>
-                    
-                    <div class="relative">
-                        <div class="bg-gradient-to-br from-neutral-900/90 to-stone-900/90 rounded-2xl p-8 md:p-12 border border-rose-700/30 backdrop-blur-sm min-h-[320px] flex flex-col justify-center transition-all duration-700">
-                            <div class="flex items-start gap-4 mb-6">
-                                <div class="text-5xl flex-shrink-0">${current.avatar}</div>
-                                <div>
-                                    <h3 class="text-white font-bold text-xl mb-1">${current.name}</h3>
-                                    <p class="text-rose-400 text-sm font-medium">${current.role}</p>
-                                </div>
-                            </div>
-                            
-                            <p class="text-stone-200 text-lg md:text-xl leading-relaxed mb-6 italic">"${current.text}"</p>
-                            
-                            <div class="inline-flex items-center gap-2 bg-rose-700/20 border border-rose-600/30 rounded-full px-4 py-2 self-start">
-                                <i data-lucide="check-circle" class="w-4 h-4 text-rose-400"></i>
-                                <span class="text-rose-300 text-sm font-semibold">${current.highlight}</span>
-                            </div>
-                        </div>
-
-                        <div class="flex justify-center gap-2 mt-8">
-                            ${testimonials.map((_, idx) => `
-                                <button onclick="state.activeTestimonial = ${idx}; state.lastManualChange = Date.now(); render();"
-                                    class="transition-all ${idx === state.activeTestimonial ? 'w-8 h-2 bg-rose-500' : 'w-2 h-2 bg-stone-600 hover:bg-stone-500'} rounded-full"></button>
-                            `).join('')}
-                        </div>
-
-                        <div class="flex justify-center gap-4 mt-6">
-                            <button onclick="state.activeTestimonial = (state.activeTestimonial - 1 + 6) % 6; state.lastManualChange = Date.now(); render();"
-                                class="text-stone-400 hover:text-white transition-colors">
-                                <i data-lucide="chevron-left" class="w-8 h-8"></i>
-                            </button>
-                            <button onclick="state.activeTestimonial = (state.activeTestimonial + 1) % 6; state.lastManualChange = Date.now(); render();"
-                                class="text-stone-400 hover:text-white transition-colors">
-                                <i data-lucide="chevron-right" class="w-8 h-8"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>`;
-        }
-
-        function renderBenefits() {
-            return `
-            <section class="py-20 px-4 bg-neutral-900/30">
-                <div class="max-w-6xl mx-auto">
-                    <h2 class="text-3xl md:text-4xl font-bold text-white text-center mb-12">¿Por qué más de 2.400 personas eligen WinesOf PASS?</h2>
-                    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        ${[
-                            { icon: 'wine', text: 'Más de 80 experiencias', highlight: 'vino, gastronomía y más' },
-                            { icon: 'utensils', text: '20-30% de descuento', highlight: 'en restaurantes premium' },
-                            { icon: 'hotel', text: 'Beneficios en hoteles', highlight: 'escapadas exclusivas' },
-                            { icon: 'gift', text: '2x1 y cortesías', highlight: 'al consumir en locales' }
-                        ].map(b => `
-                        <div class="bg-gradient-to-br from-neutral-900/80 to-stone-900/80 p-6 rounded-2xl border border-rose-700/20 hover:border-rose-600/50 transition-all hover:scale-105">
-                            <i data-lucide="${b.icon}" class="w-8 h-8 text-rose-500 mb-4"></i>
-                            <h3 class="text-white font-semibold text-lg mb-2">${b.text}</h3>
-                            <p class="text-rose-400 font-medium">${b.highlight}</p>
-                        </div>`).join('')}
-                    </div>
-                </div>
-            </section>`;
-        }
-
-        function renderPricing() {
+            const locationText = state.isUruguay ? 'de Uruguay' : 'en Uruguay';
+            const locationDetail = state.isUruguay 
+                ? 'con descuentos de 20-30%, 2x1 y cortesías todos los días' 
+                : 'con descuentos de 20-30%, 2x1 y cortesías durante tu estadía. Descubrí Montevideo, Punta del Este, Colonia, Maldonado y más';
+            
             const c = state.currency;
             const mp = state.isUruguay ? '615' : '15';
             const sp = state.isUruguay ? '3.075' : '75';
@@ -458,147 +243,273 @@
             const ao = state.isUruguay ? '7.380' : '180';
             const as = state.isUruguay ? '1.230' : '30';
             
-            const plans = [
-                { name: 'Mensual', price: mp, period: '/mes', popular: false, savings: 'Probá sin compromiso', features: ['Todos los descuentos', 'Sin permanencia', 'Acceso inmediato', 'App móvil'], value: 'mensual' },
-                { name: 'Semestral', price: sp, originalPrice: so, period: '/6 meses', popular: true, savings: `1 mes GRATIS - Ahorrás ${c}${ss}`, discount: '1 MES GRATIS', features: ['Todos los descuentos', 'Evento exclusivo', 'Prioridad reservas', 'App móvil', 'Regalo bienvenida'], value: 'semestral' },
-                { name: 'Anual', price: ap, originalPrice: ao, period: '/año', popular: false, savings: `2 meses GRATIS - Ahorrás ${c}${as}`, discount: '2 MESES GRATIS', features: ['Todos los descuentos', '3 eventos exclusivos', 'Máxima prioridad', 'App móvil', 'Pack premium', 'Upgrades gratis'], value: 'anual' }
-            ];
-            
-            return `
-            <section id="pricing" class="py-20 px-4 bg-neutral-900/30">
-                <div class="max-w-6xl mx-auto">
-                    <h2 class="text-3xl md:text-4xl font-bold text-white text-center mb-4">Planes disponibles en Noviembre 2025</h2>
-                    <p class="text-stone-300 text-center mb-12 text-lg">Asegurá tu lugar ahora. Los precios podrían aumentar en la próxima tanda.</p>
-                    <div class="grid md:grid-cols-3 gap-8">
-                        ${plans.map(plan => `
-                        <div class="relative bg-gradient-to-br from-neutral-900/80 to-stone-900/80 p-8 rounded-2xl border-2 ${plan.popular ? 'border-rose-600 shadow-2xl shadow-rose-700/30' : 'border-stone-700'} transition-all hover:scale-105">
-                            ${plan.popular ? '<div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-rose-700 to-red-700 text-white px-4 py-1 rounded-full text-sm font-bold">MÁS ELEGIDO</div>' : ''}
-                            ${plan.discount ? `<div class="absolute -top-4 -right-4 bg-green-600 text-white px-3 py-1 rounded-full text-xs font-bold rotate-12">${plan.discount}</div>` : ''}
-                            <div class="absolute top-4 right-4">
-                                <div class="bg-red-500/20 border border-red-500/30 rounded-full px-2 py-1">
-                                    <span class="text-red-300 text-xs font-bold">AGOTADO</span>
+            app.innerHTML = `
+                ${state.scrolled ? `
+                <div class="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-rose-700 to-red-700 p-4 z-40 shadow-2xl">
+                    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div class="text-white text-center sm:text-left">
+                            <p class="font-bold">🔥 Membresías agotadas - ${state.waitlistCount} personas esperando</p>
+                            <p class="text-sm text-orange-100">Próxima tanda: Noviembre 2025</p>
+                        </div>
+                        <button class="open-modal bg-white text-rose-700 px-6 py-3 rounded-full font-bold hover:scale-105 transition-transform shadow-lg" data-plan="semestral" data-location="sticky">
+                            Unirme a la lista
+                        </button>
+                    </div>
+                </div>` : ''}
+
+                <nav class="fixed top-0 w-full z-50 transition-all duration-300 ${state.scrolled ? 'bg-neutral-950/95 backdrop-blur-lg shadow-xl' : 'bg-transparent'}">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+                        <div class="flex items-center gap-3">
+                            <div class="relative w-10 h-10">
+                                <div class="absolute inset-0 bg-gradient-to-br from-rose-700 to-red-800 rounded-full opacity-20"></div>
+                                <i data-lucide="map-pin" class="absolute inset-0 m-auto text-rose-600 w-6 h-6"></i>
+                            </div>
+                            <span class="text-2xl font-bold text-white">WinesOf<span class="text-rose-500">PASS</span></span>
+                        </div>
+                        <button class="open-modal bg-gradient-to-r from-rose-700 to-red-700 text-white px-6 py-2.5 rounded-full font-semibold hover:scale-105 transition-transform shadow-lg" data-plan="semestral" data-location="navbar">
+                            Unirme a la lista
+                        </button>
+                    </div>
+                </nav>
+
+                <section class="pt-32 pb-20 px-4 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(190,18,60,0.15),transparent_50%)]"></div>
+                    <div class="max-w-5xl mx-auto text-center relative z-10">
+                        <div class="inline-flex items-center gap-2 bg-red-500/20 border border-red-500/30 rounded-full px-4 py-2 mb-6 backdrop-blur-sm animate-pulse-soft">
+                            <i data-lucide="alert-circle" class="w-4 h-4 text-red-300"></i>
+                            <span class="text-red-200 text-sm font-medium">🔥 AGOTADO - ${state.waitlistCount} personas esperando acceso</span>
+                        </div>
+                        
+                        <h1 class="text-4xl sm:text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+                            Experiencias gastronómicas<br>y enoturísticas
+                            <span class="bg-gradient-to-r from-rose-400 to-red-400 bg-clip-text text-transparent"> sin límites</span>
+                        </h1>
+                        
+                        <p class="text-lg sm:text-xl md:text-2xl text-stone-300 mb-8 max-w-3xl mx-auto">
+                            Accedé a las mejores <strong class="text-white">bodegas, restaurantes, hoteles y vinotecas</strong> ${locationText} ${locationDetail}.
+                        </p>
+
+                        <div class="bg-stone-900/50 border-2 border-red-500/50 rounded-2xl p-6 mb-8 max-w-2xl mx-auto backdrop-blur-sm">
+                            <p class="text-red-400 font-bold text-lg mb-2">🔒 Lista exclusiva de acceso limitado</p>
+                            <p class="text-stone-300">Próxima apertura: <strong class="text-white">Noviembre 2025</strong> • Cupos limitados</p>
+                        </div>
+
+                        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                            <button class="open-modal bg-gradient-to-r from-rose-700 to-red-700 text-white px-8 py-4 rounded-full font-bold text-lg hover:scale-105 transition-transform shadow-2xl shadow-rose-700/50 flex items-center justify-center gap-2 group" data-plan="semestral" data-location="hero">
+                                Asegurar mi lugar
+                                <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
+                            </button>
+                            <button class="scroll-pricing border-2 border-rose-500 text-rose-400 px-8 py-4 rounded-full font-semibold text-lg hover:bg-rose-950/30 transition-all backdrop-blur-sm">
+                                Ver planes y precios
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="py-16 px-4 bg-neutral-900/30">
+                    <div class="max-w-6xl mx-auto">
+                        <h3 class="text-2xl md:text-3xl font-bold text-white text-center mb-3">Más de 80 experiencias en 4 categorías</h3>
+                        <p class="text-stone-400 text-center mb-12 max-w-2xl mx-auto">Desde degustaciones en bodegas boutique hasta cenas en restaurantes de autor</p>
+                        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            ${[
+                                { icon: 'wine', name: 'Bodegas', desc: 'Degustaciones exclusivas', detail: 'Accedé a bodegas premium con 2x1 y 20% OFF', color: 'from-rose-700 to-red-800' },
+                                { icon: 'utensils', name: 'Gastronomía', desc: 'Restaurantes gourmet', detail: '20-30% de descuento y cortesías especiales', color: 'from-red-500 to-rose-600' },
+                                { icon: 'hotel', name: 'Hotelería', desc: 'Escapadas de ensueño', detail: 'Descuentos en hoteles y experiencias completas', color: 'from-pink-600 to-rose-700' },
+                                { icon: 'shopping-bag', name: 'Vinotecas', desc: 'Vinos para llevar', detail: '15-25% OFF y acceso a ediciones limitadas', color: 'from-rose-600 to-red-700' }
+                            ].map(cat => `
+                            <div class="bg-gradient-to-br from-neutral-900 to-stone-900 p-6 rounded-2xl border border-rose-700/20 hover:border-rose-600/50 transition-all hover:scale-105 group">
+                                <div class="w-16 h-16 rounded-full bg-gradient-to-br ${cat.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                    <i data-lucide="${cat.icon}" class="w-7 h-7 text-white"></i>
+                                </div>
+                                <h4 class="text-white font-bold text-xl mb-2">${cat.name}</h4>
+                                <p class="text-rose-400 text-sm font-semibold mb-3">${cat.desc}</p>
+                                <p class="text-stone-400 text-sm leading-relaxed">${cat.detail}</p>
+                            </div>`).join('')}
+                        </div>
+                    </div>
+                </section>
+
+                <section class="py-16 px-4">
+                    <div class="max-w-4xl mx-auto">
+                        <div class="bg-gradient-to-br from-neutral-900 to-stone-900 rounded-2xl p-8 border-2 border-rose-700/30">
+                            <h3 class="text-2xl md:text-3xl font-bold text-white text-center mb-6">💰 ¿Por qué se agotó tan rápido?</h3>
+                            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                                <div class="bg-stone-800/50 rounded-xl p-6">
+                                    <p class="text-stone-300 mb-2">Sin WinesOf PASS:</p>
+                                    <p class="text-white text-lg">1 salida/semana × ${c}${state.isUruguay ? '2.500' : '60'} promedio</p>
+                                    <p class="text-3xl font-bold text-red-400 mt-2">= ${c}${state.isUruguay ? '10.000' : '240'}/mes</p>
+                                </div>
+                                <div class="bg-stone-800/50 rounded-xl p-6 border-2 border-rose-700">
+                                    <p class="text-stone-300 mb-2">Con WinesOf PASS:</p>
+                                    <p class="text-white text-lg">1 salida/semana × ${c}${state.isUruguay ? '1.500' : '35'} (con descuentos)</p>
+                                    <p class="text-3xl font-bold text-green-400 mt-2">= ${c}${state.isUruguay ? '6.000' : '140'}/mes</p>
                                 </div>
                             </div>
-                            <h3 class="text-2xl font-bold text-white mb-2">${plan.name}</h3>
-                            <div class="mb-4">
-                                <span class="text-5xl font-bold text-white">${c}${plan.price}</span>
-                                <span class="text-stone-400">${plan.period}</span>
-                                ${plan.originalPrice ? `<div class="mt-1"><span class="text-stone-500 line-through text-sm">${c}${plan.originalPrice}</span></div>` : ''}
+                            <div class="text-center bg-gradient-to-r from-rose-700 to-red-700 rounded-xl p-6">
+                                <p class="text-white text-2xl font-bold">✨ Ahorrás ${c}${state.isUruguay ? '4.000' : '100'}/mes = ${c}${state.isUruguay ? '48.000' : '1.200'}/año</p>
+                                <p class="text-rose-100 mt-2">El PASS se paga solo en 2 salidas. A mayor frecuencia, mayor ahorro.</p>
                             </div>
-                            <div class="bg-rose-700/20 border border-rose-600/30 rounded-lg px-3 py-2 mb-6">
-                                <p class="text-rose-300 font-semibold text-sm">${plan.savings}</p>
-                            </div>
-                            <ul class="space-y-3 mb-8">
-                                ${plan.features.map(f => `
-                                <li class="flex items-start gap-2 text-stone-300">
-                                    <i data-lucide="check" class="w-5 h-5 text-rose-500 flex-shrink-0 mt-0.5"></i>
-                                    <span>${f}</span>
-                                </li>`).join('')}
-                            </ul>
-                            <button onclick="openModal('${plan.value}', 'pricing')" 
-                                class="w-full py-3 rounded-xl font-bold transition-all ${plan.popular ? 'bg-gradient-to-r from-rose-700 to-red-700 text-white hover:scale-105 shadow-lg shadow-rose-700/50' : 'bg-stone-700 text-white hover:bg-stone-600'}">
-                                Reservar ${plan.name}
-                            </button>
-                        </div>`).join('')}
+                        </div>
                     </div>
-                    <div class="mt-12 text-center bg-stone-800/50 rounded-xl p-6 border border-rose-700/20">
-                        <p class="text-white text-lg font-semibold mb-2">✅ Precio bloqueado</p>
-                        <p class="text-stone-300">Al unirte a la lista, garantizamos estos precios para tu primera compra</p>
-                    </div>
-                </div>
-            </section>`;
-        }
+                </section>
 
-        function renderFAQ() {
-            const faqs = [
-                { q: '¿Cuándo hay nuevas membresías?', a: 'Liberamos tandas limitadas cada mes. La próxima es en Noviembre 2025. Al unirte a la lista, te avisamos 24hs antes del lanzamiento.' },
-                { q: '¿Por qué se limitan las membresías?', a: 'Para garantizar la mejor experiencia en cada establecimiento. No queremos saturar los lugares y mantener la exclusividad.' },
-                { q: '¿Qué tipo de beneficios incluye?', a: '2x1 en copas y botellas, 20-30% de descuento en menús, cortesías al consumir, y acceso a eventos exclusivos en bodegas y restaurantes.' },
-                { q: '¿Dónde puedo usar el PASS?', a: 'En más de 80 experiencias: bodegas, restaurantes gourmet, hoteles boutique y vinotecas premium en todo Uruguay.' },
-                { q: '¿Puedo cancelar cuando quiera?', a: 'Sí, sin permanencia. Cancelás desde la app cuando quieras, sin preguntas ni penalizaciones.' }
-            ];
+                <section class="py-20 px-4">
+                    <div class="max-w-5xl mx-auto">
+                        <h2 class="text-3xl md:text-4xl font-bold text-white text-center mb-4">Historias reales de nuestros miembros</h2>
+                        <p class="text-stone-400 text-center mb-12">Diferentes perfiles, mismo resultado: más experiencias, menos gasto</p>
+                        
+                        <div class="relative">
+                            <div id="testimonial-card" class="bg-gradient-to-br from-neutral-900/90 to-stone-900/90 rounded-2xl p-8 md:p-12 border border-rose-700/30 backdrop-blur-sm min-h-[320px] flex flex-col justify-center transition-all duration-700">
+                                <div class="flex items-start gap-4 mb-6">
+                                    <div class="text-5xl flex-shrink-0">🍽️</div>
+                                    <div>
+                                        <h3 class="text-white font-bold text-xl mb-1">Carolina M.</h3>
+                                        <p class="text-rose-400 text-sm font-medium">Foodie & Content Creator</p>
+                                    </div>
+                                </div>
+                                <p class="text-stone-200 text-lg md:text-xl leading-relaxed mb-6 italic">"Como creadora de contenido gastronómico, visito restaurantes constantemente. Antes gastaba fortunas. Ahora con el PASS ceno en los mejores lugares y además ahorro para viajes."</p>
+                                <div class="inline-flex items-center gap-2 bg-rose-700/20 border border-rose-600/30 rounded-full px-4 py-2 self-start">
+                                    <i data-lucide="check-circle" class="w-4 h-4 text-rose-400"></i>
+                                    <span class="text-rose-300 text-sm font-semibold">Ahorro real: $6.500/mes</span>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-center gap-2 mt-8">
+                                ${[0,1,2,3,4,5].map(idx => `
+                                    <button class="testimonial-dot transition-all ${idx === 0 ? 'w-8 h-2 bg-rose-500' : 'w-2 h-2 bg-stone-600 hover:bg-stone-500'} rounded-full" data-index="${idx}"></button>
+                                `).join('')}
+                            </div>
+
+                            <div class="flex justify-center gap-4 mt-6">
+                                <button class="testimonial-prev text-stone-400 hover:text-white transition-colors">
+                                    <i data-lucide="chevron-left" class="w-8 h-8"></i>
+                                </button>
+                                <button class="testimonial-next text-stone-400 hover:text-white transition-colors">
+                                    <i data-lucide="chevron-right" class="w-8 h-8"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="py-20 px-4 bg-neutral-900/30">
+                    <div class="max-w-6xl mx-auto">
+                        <h2 class="text-3xl md:text-4xl font-bold text-white text-center mb-12">¿Por qué más de 2.400 personas eligen WinesOf PASS?</h2>
+                        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            ${[
+                                { icon: 'wine', text: 'Más de 80 experiencias', highlight: 'vino, gastronomía y más' },
+                                { icon: 'utensils', text: '20-30% de descuento', highlight: 'en restaurantes premium' },
+                                { icon: 'hotel', text: 'Beneficios en hoteles', highlight: 'escapadas exclusivas' },
+                                { icon: 'gift', text: '2x1 y cortesías', highlight: 'al consumir en locales' }
+                            ].map(b => `
+                            <div class="bg-gradient-to-br from-neutral-900/80 to-stone-900/80 p-6 rounded-2xl border border-rose-700/20 hover:border-rose-600/50 transition-all hover:scale-105">
+                                <i data-lucide="${b.icon}" class="w-8 h-8 text-rose-500 mb-4"></i>
+                                <h3 class="text-white font-semibold text-lg mb-2">${b.text}</h3>
+                                <p class="text-rose-400 font-medium">${b.highlight}</p>
+                            </div>`).join('')}
+                        </div>
+                    </div>
+                </section>
+
+                <section id="pricing" class="py-20 px-4 bg-neutral-900/30">
+                    <div class="max-w-6xl mx-auto">
+                        <h2 class="text-3xl md:text-4xl font-bold text-white text-center mb-4">Planes disponibles en Noviembre 2025</h2>
+                        <p class="text-stone-300 text-center mb-12 text-lg">🔒 Lista exclusiva con acceso anticipado a beneficios</p>
+                        <div class="grid md:grid-cols-3 gap-8">
+                            ${[
+                                { 
+                                    name: 'Mensual', price: mp, period: '/mes', popular: false, 
+                                    savings: 'Sin compromiso. Probá y cancelá cuando quieras', 
+                                    features: ['✅ Acceso a todos los descuentos', '✅ Sin permanencia mínima', '✅ Cancela cuando quieras', '✅ Soporte por WhatsApp', '🎁 Sorteos mensuales'], 
+                                    value: 'mensual' 
+                                },
+                                { 
+                                    name: 'Semestral', price: sp, originalPrice: so, period: '/6 meses', popular: true, 
+                                    savings: `1 mes GRATIS - Ahorrás ${c}${ss}`, discount: '1 MES GRATIS',
+                                    features: ['✅ Todos los beneficios', '⚡ Aviso anticipado de nuevos lugares', '🔔 Notificaciones prioritarias', '📲 Soporte preferencial', '🎁 Sorteos exclusivos semestrales', '🔒 Precio bloqueado 6 meses'], 
+                                    value: 'semestral' 
+                                },
+                                { 
+                                    name: 'Anual', price: ap, originalPrice: ao, period: '/año', popular: false, 
+                                    savings: `2 meses GRATIS - Ahorrás ${c}${as}`, discount: '2 MESES GRATIS',
+                                    features: ['✅ Todos los beneficios', '⭐ Primera notificación de partners nuevos', '👑 Soporte VIP directo', '🎯 Precio garantizado todo el año', '🎁 Participación en eventos especiales', '💎 Descuento en renovación'], 
+                                    value: 'anual' 
+                                }
+                            ].map(plan => `
+                            <div class="relative bg-gradient-to-br from-neutral-900/80 to-stone-900/80 p-8 rounded-2xl border-2 ${plan.popular ? 'border-rose-600 shadow-2xl shadow-rose-700/30' : 'border-stone-700'} transition-all hover:scale-105">
+                                ${plan.popular ? '<div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-rose-700 to-red-700 text-white px-4 py-1 rounded-full text-sm font-bold">MÁS ELEGIDO</div>' : ''}
+                                ${plan.discount ? `<div class="absolute -top-4 -right-4 bg-green-600 text-white px-3 py-1 rounded-full text-xs font-bold rotate-12">${plan.discount}</div>` : ''}
+                                <div class="absolute top-4 right-4">
+                                    <div class="bg-red-500/20 border border-red-500/30 rounded-full px-2 py-1">
+                                        <span class="text-red-300 text-xs font-bold">AGOTADO</span>
+                                    </div>
+                                </div>
+                                <h3 class="text-2xl font-bold text-white mb-2">${plan.name}</h3>
+                                <div class="mb-4">
+                                    <span class="text-5xl font-bold text-white">${c}${plan.price}</span>
+                                    <span class="text-stone-400">${plan.period}</span>
+                                    ${plan.originalPrice ? `<div class="mt-1"><span class="text-stone-500 line-through text-sm">${c}${plan.originalPrice}</span></div>` : ''}
+                                </div>
+                                <div class="bg-rose-700/20 border border-rose-600/30 rounded-lg px-3 py-2 mb-6">
+                                    <p class="text-rose-300 font-semibold text-sm">${plan.savings}</p>
+                                </div>
+                                <ul class="space-y-3 mb-8">
+                                    ${plan.features.map(f => `<li class="flex items-start gap-2 text-stone-300 text-sm">${f}</li>`).join('')}
+                                </ul>
+                                <button class="open-modal w-full py-3 rounded-xl font-bold transition-all ${plan.popular ? 'bg-gradient-to-r from-rose-700 to-red-700 text-white hover:scale-105 shadow-lg' : 'bg-stone-700 text-white hover:bg-stone-600'}" data-plan="${plan.value}" data-location="pricing">
+                                    Reservar ${plan.name}
+                                </button>
+                            </div>`).join('')}
+                        </div>
+                        <div class="mt-12 text-center bg-stone-800/50 rounded-xl p-6 border border-rose-700/20">
+                            <p class="text-white text-lg font-semibold mb-2">✅ Precio bloqueado al unirte</p>
+                            <p class="text-stone-300">Garantizamos estos precios para quienes estén en la lista de espera</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="py-20 px-4 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-r from-rose-900/30 to-red-900/30"></div>
+                    <div class="max-w-4xl mx-auto text-center relative z-10">
+                        <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">¿Listo para ser parte de la lista exclusiva?</h2>
+                        <p class="text-xl text-stone-300 mb-8">
+                            <strong class="text-white">${state.waitlistCount}+ personas</strong> ya están esperando su acceso
+                        </p>
+                        <button class="open-modal bg-gradient-to-r from-rose-700 to-red-700 text-white px-12 py-5 rounded-full font-bold text-xl hover:scale-105 transition-transform shadow-2xl shadow-rose-700/50" data-plan="semestral" data-location="final">
+                            Asegurar mi lugar ahora 🍷
+                        </button>
+                        <p class="text-stone-400 mt-6 text-sm">✓ Notificación prioritaria · ✓ Precio bloqueado · ✓ Sorteos exclusivos</p>
+                    </div>
+                </section>
+
+                <footer class="bg-neutral-950 py-8 px-4 border-t border-stone-800">
+                    <div class="max-w-6xl mx-auto text-center text-stone-400 text-sm">
+                        <p>© 2025 WinesOf PASS · Todos los derechos reservados</p>
+                    </div>
+                </footer>
+            `;
             
-            return `
-            <section class="py-20 px-4 bg-neutral-900/30">
-                <div class="max-w-3xl mx-auto">
-                    <h2 class="text-3xl md:text-4xl font-bold text-white text-center mb-12">Preguntas frecuentes</h2>
-                    <div class="space-y-4">
-                        ${faqs.map(faq => `
-                        <details class="bg-stone-800/50 rounded-xl p-6 border border-stone-700 hover:border-rose-600/50 transition-all">
-                            <summary class="text-white font-semibold cursor-pointer">${faq.q}</summary>
-                            <p class="text-stone-300 mt-3">${faq.a}</p>
-                        </details>`).join('')}
-                    </div>
-                </div>
-            </section>`;
-        }
-
-        function renderFinalCTA() {
-            return `
-            <section class="py-20 px-4 relative overflow-hidden">
-                <div class="absolute inset-0 bg-gradient-to-r from-rose-900/30 to-red-900/30"></div>
-                <div class="max-w-4xl mx-auto text-center relative z-10">
-                    <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">¿Listo para ser parte de la próxima tanda?</h2>
-                    <p class="text-xl text-stone-300 mb-8">
-                        <strong class="text-white">${state.waitlistCount}+ personas</strong> ya están esperando su lugar
-                    </p>
-                    <button onclick="openModal('semestral', 'final_cta')" 
-                        class="bg-gradient-to-r from-rose-700 to-red-700 text-white px-12 py-5 rounded-full font-bold text-xl hover:scale-105 transition-transform shadow-2xl shadow-rose-700/50">
-                        Asegurar mi lugar ahora 🍷
-                    </button>
-                    <p class="text-stone-400 mt-6 text-sm">✓ Notificación prioritaria · ✓ Precio bloqueado · ✓ Bonus exclusivo</p>
-                </div>
-            </section>`;
-        }
-
-        function renderFooter() {
-            return `
-            <footer class="bg-neutral-950 py-8 px-4 border-t border-stone-800">
-                <div class="max-w-6xl mx-auto text-center text-stone-400 text-sm">
-                    <p>© 2025 WinesOf PASS · Todos los derechos reservados</p>
-                </div>
-            </footer>`;
+            lucide.createIcons();
         }
 
         window.addEventListener('scroll', () => {
             const newScrolled = window.scrollY > 50;
             if (newScrolled !== state.scrolled) {
                 state.scrolled = newScrolled;
-                render();
+                init();
             }
         });
 
         setInterval(() => {
-            if (Math.random() > 0.7) {
-                state.waitlistCount++;
-            }
+            if (Math.random() > 0.7) state.waitlistCount++;
         }, 45000);
 
-        const testimonialReadTimes = [8000, 9000, 9000, 7000, 9000, 8000];
-        let testimonialTimer;
-
-        function startTestimonialRotation() {
-            if (testimonialTimer) clearTimeout(testimonialTimer);
-            
-            const currentReadTime = testimonialReadTimes[state.activeTestimonial];
-            
-            testimonialTimer = setTimeout(() => {
-                const timeSinceManualChange = Date.now() - state.lastManualChange;
-                if (timeSinceManualChange > 3000) {
-                    state.activeTestimonial = (state.activeTestimonial + 1) % 6;
-                    render();
-                }
-                startTestimonialRotation();
-            }, currentReadTime);
-        }
-
-        async function init() {
+        async function start() {
             await detectCountry();
-            render();
-            startTestimonialRotation();
+            init();
         }
 
-        init();
+        start();
     </script>
 </body>
 </html>
