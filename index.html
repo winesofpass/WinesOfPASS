@@ -34,6 +34,7 @@
             showModal: false,
             submitted: false,
             waitlistCount: CONFIG.INITIAL_WAITLIST_COUNT,
+            activeTestimonial: 0,
             formData: { name: '', email: '', phone: '', plan: 'semestral' }
         };
 
@@ -126,6 +127,7 @@
                 ${renderHero()}
                 ${renderCategories()}
                 ${renderROI()}
+                ${renderTestimonials()}
                 ${renderBenefits()}
                 ${renderPricing()}
                 ${renderFAQ()}
@@ -317,18 +319,18 @@
                         <div class="grid md:grid-cols-2 gap-6 mb-6">
                             <div class="bg-stone-800/50 rounded-xl p-6">
                                 <p class="text-stone-300 mb-2">Sin WinesOf PASS:</p>
-                                <p class="text-white text-lg">2 salidas/semana × $2.500 promedio</p>
-                                <p class="text-3xl font-bold text-red-400 mt-2">= $20.000/mes</p>
+                                <p class="text-white text-lg">1 salida/semana × $2.500 promedio</p>
+                                <p class="text-3xl font-bold text-red-400 mt-2">= $10.000/mes</p>
                             </div>
                             <div class="bg-stone-800/50 rounded-xl p-6 border-2 border-rose-700">
                                 <p class="text-stone-300 mb-2">Con WinesOf PASS:</p>
-                                <p class="text-white text-lg">2 salidas/semana × $1.500 (con descuentos)</p>
-                                <p class="text-3xl font-bold text-green-400 mt-2">= $12.000/mes</p>
+                                <p class="text-white text-lg">1 salida/semana × $1.500 (con descuentos)</p>
+                                <p class="text-3xl font-bold text-green-400 mt-2">= $6.000/mes</p>
                             </div>
                         </div>
                         <div class="text-center bg-gradient-to-r from-rose-700 to-red-700 rounded-xl p-6">
-                            <p class="text-white text-2xl font-bold">✨ Ahorrás $8.000/mes = $96.000/año</p>
-                            <p class="text-rose-100 mt-2">El PASS se paga solo en la primera salida</p>
+                            <p class="text-white text-2xl font-bold">✨ Ahorrás $4.000/mes = $48.000/año</p>
+                            <p class="text-rose-100 mt-2">El PASS se paga solo en 2 salidas. A mayor frecuencia, mayor ahorro.</p>
                         </div>
                     </div>
                 </div>
@@ -352,6 +354,108 @@
                             <h3 class="text-white font-semibold text-lg mb-2">${b.text}</h3>
                             <p class="text-rose-400 font-medium">${b.highlight}</p>
                         </div>`).join('')}
+                    </div>
+                </div>
+            </section>`;
+        }
+
+        function renderTestimonials() {
+            const testimonials = [
+                {
+                    name: "Carolina M.",
+                    role: "Foodie & Content Creator",
+                    text: "Como creadora de contenido gastronómico, visito restaurantes constantemente. Antes gastaba fortunas. Ahora con el PASS ceno en los mejores lugares y además ahorro para viajes.",
+                    highlight: "Ahorro real: $6.500/mes",
+                    avatar: "🍽️"
+                },
+                {
+                    name: "Rodrigo P.",
+                    role: "Sommelier",
+                    text: "Pensé que los descuentos eran solo para vinos básicos. Me sorprendí cuando pude acceder a degustaciones premium de bodegas boutique con 2x1. Amplió mi red profesional.",
+                    highlight: "Acceso a bodegas exclusivas",
+                    avatar: "🍷"
+                },
+                {
+                    name: "Lucía & Martín",
+                    role: "Pareja joven sin tarjeta",
+                    text: "No tenemos tarjetas de crédito pero queremos salir bien. El PASS nos cambió la vida: pagamos una vez al mes y disfrutamos sin culpa. Ya fuimos a 8 lugares este mes.",
+                    highlight: "Sin depender de crédito",
+                    avatar: "💑"
+                },
+                {
+                    name: "Paula S.",
+                    role: "Emprendedora",
+                    text: "Uso el PASS para reuniones de negocio. Mis clientes quedan impresionados con los lugares, yo ahorro en gastos de representación. Win-win total.",
+                    highlight: "Networking inteligente",
+                    avatar: "💼"
+                },
+                {
+                    name: "Diego R.",
+                    role: "Dueño de Restaurante",
+                    text: "Al principio dudé, pero WinesOf PASS me trajo clientes nuevos que nunca hubieran entrado. Muchos vuelven sin el descuento. Es fidelización real, no descuentos vacíos.",
+                    highlight: "150+ clientes nuevos/mes",
+                    avatar: "👨‍🍳"
+                },
+                {
+                    name: "Fernanda L.",
+                    role: "Mamá de 2",
+                    text: "Con dos niños, salir es un lujo. El PASS nos permite una cita mensual en lugares lindos sin que duela el bolsillo. Lo mejor: también hay opciones para ir en familia.",
+                    highlight: "Calidad de vida",
+                    avatar: "👨‍👩‍👧‍👦"
+                }
+            ];
+
+            const current = testimonials[state.activeTestimonial];
+
+            return `
+            <section class="py-20 px-4">
+                <div class="max-w-5xl mx-auto">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white text-center mb-4">
+                        Historias reales de nuestros miembros
+                    </h2>
+                    <p class="text-stone-400 text-center mb-12">Diferentes perfiles, mismo resultado: más experiencias, menos gasto</p>
+                    
+                    <div class="relative">
+                        <div class="bg-gradient-to-br from-neutral-900/90 to-stone-900/90 rounded-2xl p-8 md:p-12 border border-rose-700/30 backdrop-blur-sm min-h-[320px] flex flex-col justify-center">
+                            <div class="flex items-start gap-4 mb-6">
+                                <div class="text-5xl flex-shrink-0">${current.avatar}</div>
+                                <div>
+                                    <h3 class="text-white font-bold text-xl mb-1">${current.name}</h3>
+                                    <p class="text-rose-400 text-sm font-medium">${current.role}</p>
+                                </div>
+                            </div>
+                            
+                            <p class="text-stone-200 text-lg md:text-xl leading-relaxed mb-6 italic">
+                                "${current.text}"
+                            </p>
+                            
+                            <div class="inline-flex items-center gap-2 bg-rose-700/20 border border-rose-600/30 rounded-full px-4 py-2 self-start">
+                                <i data-lucide="check-circle" class="w-4 h-4 text-rose-400"></i>
+                                <span class="text-rose-300 text-sm font-semibold">${current.highlight}</span>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-center gap-2 mt-8">
+                            ${testimonials.map((_, idx) => `
+                                <button
+                                    onclick="state.activeTestimonial = ${idx}; render();"
+                                    class="transition-all ${idx === state.activeTestimonial ? 'w-8 h-2 bg-rose-500' : 'w-2 h-2 bg-stone-600 hover:bg-stone-500'} rounded-full"
+                                ></button>
+                            `).join('')}
+                        </div>
+
+                        <div class="flex justify-center gap-4 mt-6">
+                            <button 
+                                onclick="state.activeTestimonial = (state.activeTestimonial - 1 + ${testimonials.length}) % ${testimonials.length}; render();"
+                                class="text-stone-400 hover:text-white transition-colors">
+                                <i data-lucide="chevron-left" class="w-8 h-8"></i>
+                            </button>
+                            <button 
+                                onclick="state.activeTestimonial = (state.activeTestimonial + 1) % ${testimonials.length}; render();"
+                                class="text-stone-400 hover:text-white transition-colors">
+                                <i data-lucide="chevron-right" class="w-8 h-8"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </section>`;
@@ -498,6 +602,15 @@
                 }
             }
         }, 45000);
+
+        // Auto-rotate testimonials
+        setInterval(() => {
+            const testimonialSection = document.querySelector('section:has(.bg-gradient-to-br.from-neutral-900\\/90)');
+            if (testimonialSection) {
+                state.activeTestimonial = (state.activeTestimonial + 1) % 6;
+                render();
+            }
+        }, 5000);
 
         render();
     </script>
