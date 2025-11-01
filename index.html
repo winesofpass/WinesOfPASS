@@ -34,14 +34,27 @@
             showModal: false,
             submitted: false,
             waitlistCount: CONFIG.INITIAL_WAITLIST_COUNT,
+            isUruguay: true,
+            currency: '$',
             activeTestimonial: 0,
-            formData: { name: '', email: '', phone: '', plan: 'semestral' }
+            lastManualChange: 0
         };
+
+        async function detectCountry() {
+            try {
+                const response = await fetch('https://ipapi.co/json/');
+                const data = await response.json();
+                state.isUruguay = data.country_code === 'UY';
+                state.currency = state.isUruguay ? '$' : 'USD';
+                console.log('País detectado:', data.country_code);
+            } catch (error) {
+                console.log('No se pudo detectar país, asumiendo Uruguay');
+            }
+        }
 
         async function sendToGoogleSheets(data) {
             try {
-                console.log('📤 Enviando a Google Sheets:', data);
-                
+                console.log('Enviando a Google Sheets:', data);
                 await fetch(CONFIG.GOOGLE_SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
@@ -56,37 +69,44 @@
                         source: data.source
                     })
                 });
-
-                console.log('✅ Datos enviados correctamente');
+                console.log('Datos enviados correctamente');
                 return { success: true };
             } catch (error) {
-                console.error('❌ Error:', error);
+                console.error('Error:', error);
                 return { success: false };
             }
         }
 
         function trackEvent(eventName, properties = {}) {
-            console.log('📊 Event:', eventName, properties);
+            console.log('Track Event:', eventName, properties);
             if (typeof gtag !== 'undefined') gtag('event', eventName, properties);
             if (typeof fbq !== 'undefined') fbq('track', eventName, properties);
         }
 
         async function handleSubmit() {
-            if (!state.formData.name || !state.formData.email) {
+            const nameInput = document.getElementById('input-name');
+            const emailInput = document.getElementById('input-email');
+            const phoneInput = document.getElementById('input-phone');
+            const planInput = document.getElementById('input-plan');
+            
+            if (!nameInput.value || !emailInput.value) {
                 alert('Por favor completa nombre y email');
                 return;
             }
 
             const dataToSave = {
-                ...state.formData,
+                name: nameInput.value,
+                email: emailInput.value,
+                phone: phoneInput.value,
+                plan: planInput.value,
                 timestamp: new Date().toISOString(),
                 waitlistPosition: state.waitlistCount + 1,
                 source: 'landing_page'
             };
 
             trackEvent('waitlist_joined', {
-                plan: state.formData.plan,
-                phone_provided: !!state.formData.phone
+                plan: dataToSave.plan,
+                phone_provided: !!dataToSave.phone
             });
 
             await sendToGoogleSheets(dataToSave);
@@ -98,52 +118,52 @@
             setTimeout(() => {
                 state.showModal = false;
                 state.submitted = false;
-                state.formData = { name: '', email: '', phone: '', plan: 'semestral' };
                 render();
             }, 3000);
         }
 
         function openModal(plan = 'semestral', location = 'default') {
             trackEvent('waitlist_opened', { plan, location });
-            state.formData.plan = plan;
             state.showModal = true;
             render();
         }
 
         function closeModal() {
             state.showModal = false;
+            state.submitted = false;
             render();
         }
 
-        function updateFormData(field, value) {
-            state.formData[field] = value;
-        }
-
         function render() {
-            document.getElementById('app').innerHTML = `
-                ${state.showModal ? renderModal() : ''}
-                ${state.scrolled ? renderStickyBar() : ''}
-                ${renderNav()}
-                ${renderHero()}
-                ${renderCategories()}
-                ${renderROI()}
-                ${renderTestimonials()}
-                ${renderBenefits()}
-                ${renderPricing()}
-                ${renderFAQ()}
-                ${renderFinalCTA()}
-                ${renderFooter()}
-            `;
+            const app = document.getElementById('app');
+            app.innerHTML = [
+                state.showModal ? renderModal() : '',
+                state.scrolled ? renderStickyBar() : '',
+                renderNav(),
+                renderHero(),
+                renderCategories(),
+                renderROI(),
+                renderTestimonials(),
+                renderBenefits(),
+                renderPricing(),
+                renderFAQ(),
+                renderFinalCTA(),
+                renderFooter()
+            ].join('');
 
             lucide.createIcons();
-            attachEventListeners();
         }
 
         function renderModal() {
             if (!state.submitted) {
+                const c = state.currency;
+                const p1 = state.isUruguay ? '615' : '15';
+                const p2 = state.isUruguay ? '3.075' : '75';
+                const p3 = state.isUruguay ? '6.150' : '150';
+                
                 return `
-                <div class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                    <div class="bg-gradient-to-br from-neutral-900 to-stone-900 rounded-2xl p-8 max-w-md w-full border-2 border-rose-700/50 relative">
+                <div class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onclick="if(event.target === event.currentTarget) closeModal()">
+                    <div class="bg-gradient-to-br from-neutral-900 to-stone-900 rounded-2xl p-8 max-w-md w-full border-2 border-rose-700/50 relative" onclick="event.stopPropagation()">
                         <button onclick="closeModal()" class="absolute top-4 right-4 text-stone-400 hover:text-white">
                             <i data-lucide="x" class="w-6 h-6"></i>
                         </button>
@@ -159,35 +179,35 @@
                             </p>
                         </div>
 
-                        <div class="space-y-4">
+                        <form onsubmit="event.preventDefault(); handleSubmit();" class="space-y-4">
                             <div>
                                 <label class="text-stone-300 text-sm font-medium block mb-1">Nombre completo *</label>
-                                <input type="text" id="input-name" placeholder="Juan Pérez" value="${state.formData.name}"
-                                    class="w-full px-4 py-3 rounded-lg bg-stone-800 text-white border border-stone-700 focus:border-rose-600 focus:outline-none">
+                                <input type="text" id="input-name" placeholder="Juan Pérez" required
+                                    class="w-full px-4 py-3 rounded-lg bg-stone-800 text-white border border-stone-700 focus:border-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-600/50">
                             </div>
                             <div>
                                 <label class="text-stone-300 text-sm font-medium block mb-1">Email *</label>
-                                <input type="email" id="input-email" placeholder="tu@email.com" value="${state.formData.email}"
-                                    class="w-full px-4 py-3 rounded-lg bg-stone-800 text-white border border-stone-700 focus:border-rose-600 focus:outline-none">
+                                <input type="email" id="input-email" placeholder="tu@email.com" required
+                                    class="w-full px-4 py-3 rounded-lg bg-stone-800 text-white border border-stone-700 focus:border-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-600/50">
                             </div>
                             <div>
                                 <label class="text-stone-300 text-sm font-medium block mb-1">Teléfono (opcional)</label>
-                                <input type="tel" id="input-phone" placeholder="099 123 456" value="${state.formData.phone}"
-                                    class="w-full px-4 py-3 rounded-lg bg-stone-800 text-white border border-stone-700 focus:border-rose-600 focus:outline-none">
+                                <input type="tel" id="input-phone" placeholder="099 123 456"
+                                    class="w-full px-4 py-3 rounded-lg bg-stone-800 text-white border border-stone-700 focus:border-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-600/50">
                             </div>
                             <div>
                                 <label class="text-stone-300 text-sm font-medium block mb-1">Plan de interés</label>
                                 <select id="input-plan" class="w-full px-4 py-3 rounded-lg bg-stone-800 text-white border border-stone-700 focus:border-rose-600 focus:outline-none">
-                                    <option value="mensual" ${state.formData.plan === 'mensual' ? 'selected' : ''}>Mensual - $615/mes</option>
-                                    <option value="semestral" ${state.formData.plan === 'semestral' ? 'selected' : ''}>Semestral - $3.075 (1 MES GRATIS)</option>
-                                    <option value="anual" ${state.formData.plan === 'anual' ? 'selected' : ''}>Anual - $6.150 (2 MESES GRATIS)</option>
+                                    <option value="mensual">Mensual - ${c}${p1}/mes</option>
+                                    <option value="semestral" selected>Semestral - ${c}${p2} (1 MES GRATIS)</option>
+                                    <option value="anual">Anual - ${c}${p3} (2 MESES GRATIS)</option>
                                 </select>
                             </div>
-                            <button onclick="handleSubmit()" class="w-full bg-gradient-to-r from-rose-700 to-red-700 text-white py-4 rounded-lg font-bold hover:scale-105 transition-transform">
+                            <button type="submit" class="w-full bg-gradient-to-r from-rose-700 to-red-700 text-white py-4 rounded-lg font-bold hover:scale-105 transition-transform">
                                 Asegurar mi lugar
                             </button>
                             <p class="text-stone-400 text-xs text-center">Te avisaremos por email cuando haya nuevas membresías</p>
-                        </div>
+                        </form>
                     </div>
                 </div>`;
             } else {
@@ -244,6 +264,9 @@
         }
 
         function renderHero() {
+            const loc = state.isUruguay ? 'de Uruguay' : 'en Uruguay';
+            const when = state.isUruguay ? 'todos los días' : 'durante tu estadía';
+            
             return `
             <section class="pt-32 pb-20 px-4 relative overflow-hidden">
                 <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(190,18,60,0.15),transparent_50%)]"></div>
@@ -259,7 +282,7 @@
                     </h1>
                     
                     <p class="text-lg sm:text-xl md:text-2xl text-stone-300 mb-8 max-w-3xl mx-auto">
-                        Accedé a las mejores <strong class="text-white">bodegas, restaurantes, hoteles y vinotecas</strong> de Uruguay con <strong class="text-rose-400">descuentos de 20-30%, 2x1 y cortesías</strong> todos los días.
+                        Accedé a las mejores <strong class="text-white">bodegas, restaurantes, hoteles y vinotecas</strong> ${loc} con <strong class="text-rose-400">descuentos de 20-30%, 2x1 y cortesías</strong> ${when}.
                     </p>
 
                     <div class="bg-stone-900/50 border-2 border-red-500/50 rounded-2xl p-6 mb-8 max-w-2xl mx-auto backdrop-blur-sm">
@@ -283,7 +306,7 @@
         }
 
         function renderCategories() {
-            const categories = [
+            const cats = [
                 { icon: 'wine', name: 'Bodegas', desc: 'Degustaciones exclusivas', detail: 'Accedé a las bodegas más prestigiosas con 2x1 en degustaciones y 20% OFF', color: 'from-rose-700 to-red-800' },
                 { icon: 'utensils', name: 'Gastronomía', desc: 'Restaurantes gourmet', detail: '20-30% de descuento en menús de autor y cortesías especiales', color: 'from-red-500 to-rose-600' },
                 { icon: 'hotel', name: 'Hotelería', desc: 'Escapadas de ensueño', detail: 'Descuentos en hoteles boutique y experiencias enoturísticas completas', color: 'from-pink-600 to-rose-700' },
@@ -296,7 +319,7 @@
                     <h3 class="text-2xl md:text-3xl font-bold text-white text-center mb-3">Más de 80 experiencias en 4 categorías</h3>
                     <p class="text-stone-400 text-center mb-12 max-w-2xl mx-auto">Desde degustaciones en bodegas boutique hasta cenas en restaurantes de autor</p>
                     <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        ${categories.map(cat => `
+                        ${cats.map(cat => `
                         <div class="bg-gradient-to-br from-neutral-900 to-stone-900 p-6 rounded-2xl border border-rose-700/20 hover:border-rose-600/50 transition-all hover:scale-105 group">
                             <div class="w-16 h-16 rounded-full bg-gradient-to-br ${cat.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                                 <i data-lucide="${cat.icon}" class="w-7 h-7 text-white"></i>
@@ -311,6 +334,14 @@
         }
 
         function renderROI() {
+            const c = state.currency;
+            const pr = state.isUruguay ? '2.500' : '60';
+            const pw = state.isUruguay ? '1.500' : '35';
+            const mt = state.isUruguay ? '10.000' : '240';
+            const mw = state.isUruguay ? '6.000' : '140';
+            const ms = state.isUruguay ? '4.000' : '100';
+            const ys = state.isUruguay ? '48.000' : '1.200';
+            
             return `
             <section class="py-16 px-4">
                 <div class="max-w-4xl mx-auto">
@@ -319,18 +350,76 @@
                         <div class="grid md:grid-cols-2 gap-6 mb-6">
                             <div class="bg-stone-800/50 rounded-xl p-6">
                                 <p class="text-stone-300 mb-2">Sin WinesOf PASS:</p>
-                                <p class="text-white text-lg">1 salida/semana × $2.500 promedio</p>
-                                <p class="text-3xl font-bold text-red-400 mt-2">= $10.000/mes</p>
+                                <p class="text-white text-lg">1 salida/semana × ${c}${pr} promedio</p>
+                                <p class="text-3xl font-bold text-red-400 mt-2">= ${c}${mt}/mes</p>
                             </div>
                             <div class="bg-stone-800/50 rounded-xl p-6 border-2 border-rose-700">
                                 <p class="text-stone-300 mb-2">Con WinesOf PASS:</p>
-                                <p class="text-white text-lg">1 salida/semana × $1.500 (con descuentos)</p>
-                                <p class="text-3xl font-bold text-green-400 mt-2">= $6.000/mes</p>
+                                <p class="text-white text-lg">1 salida/semana × ${c}${pw} (con descuentos)</p>
+                                <p class="text-3xl font-bold text-green-400 mt-2">= ${c}${mw}/mes</p>
                             </div>
                         </div>
                         <div class="text-center bg-gradient-to-r from-rose-700 to-red-700 rounded-xl p-6">
-                            <p class="text-white text-2xl font-bold">✨ Ahorrás $4.000/mes = $48.000/año</p>
+                            <p class="text-white text-2xl font-bold">✨ Ahorrás ${c}${ms}/mes = ${c}${ys}/año</p>
                             <p class="text-rose-100 mt-2">El PASS se paga solo en 2 salidas. A mayor frecuencia, mayor ahorro.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>`;
+        }
+
+        function renderTestimonials() {
+            const testimonials = [
+                { name: "Carolina M.", role: "Foodie & Content Creator", text: "Como creadora de contenido gastronómico, visito restaurantes constantemente. Antes gastaba fortunas. Ahora con el PASS ceno en los mejores lugares y además ahorro para viajes.", highlight: "Ahorro real: $6.500/mes", avatar: "🍽️" },
+                { name: "Rodrigo P.", role: "Sommelier", text: "Pensé que los descuentos eran solo para vinos básicos. Me sorprendí cuando pude acceder a degustaciones premium de bodegas boutique con 2x1. Amplió mi red profesional.", highlight: "Acceso a bodegas exclusivas", avatar: "🍷" },
+                { name: "Lucía & Martín", role: "Pareja joven sin tarjeta", text: "No tenemos tarjetas de crédito pero queremos salir bien. El PASS nos cambió la vida: pagamos una vez al mes y disfrutamos sin culpa. Ya fuimos a 8 lugares este mes.", highlight: "Sin depender de crédito", avatar: "💑" },
+                { name: "Paula S.", role: "Emprendedora", text: "Uso el PASS para reuniones de negocio. Mis clientes quedan impresionados con los lugares, yo ahorro en gastos de representación. Win-win total.", highlight: "Networking inteligente", avatar: "💼" },
+                { name: "Diego R.", role: "Dueño de Restaurante", text: "Al principio dudé, pero WinesOf PASS me trajo clientes nuevos que nunca hubieran entrado. Muchos vuelven sin el descuento. Es fidelización real, no descuentos vacíos.", highlight: "150+ clientes nuevos/mes", avatar: "👨‍🍳" },
+                { name: "Fernanda L.", role: "Mamá de 2", text: "Con dos niños, salir es un lujo. El PASS nos permite una cita mensual en lugares lindos sin que duela el bolsillo. Lo mejor: también hay opciones para ir en familia.", highlight: "Calidad de vida", avatar: "👨‍👩‍👧‍👦" }
+            ];
+
+            const current = testimonials[state.activeTestimonial];
+
+            return `
+            <section class="py-20 px-4">
+                <div class="max-w-5xl mx-auto">
+                    <h2 class="text-3xl md:text-4xl font-bold text-white text-center mb-4">Historias reales de nuestros miembros</h2>
+                    <p class="text-stone-400 text-center mb-12">Diferentes perfiles, mismo resultado: más experiencias, menos gasto</p>
+                    
+                    <div class="relative">
+                        <div class="bg-gradient-to-br from-neutral-900/90 to-stone-900/90 rounded-2xl p-8 md:p-12 border border-rose-700/30 backdrop-blur-sm min-h-[320px] flex flex-col justify-center transition-all duration-700">
+                            <div class="flex items-start gap-4 mb-6">
+                                <div class="text-5xl flex-shrink-0">${current.avatar}</div>
+                                <div>
+                                    <h3 class="text-white font-bold text-xl mb-1">${current.name}</h3>
+                                    <p class="text-rose-400 text-sm font-medium">${current.role}</p>
+                                </div>
+                            </div>
+                            
+                            <p class="text-stone-200 text-lg md:text-xl leading-relaxed mb-6 italic">"${current.text}"</p>
+                            
+                            <div class="inline-flex items-center gap-2 bg-rose-700/20 border border-rose-600/30 rounded-full px-4 py-2 self-start">
+                                <i data-lucide="check-circle" class="w-4 h-4 text-rose-400"></i>
+                                <span class="text-rose-300 text-sm font-semibold">${current.highlight}</span>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-center gap-2 mt-8">
+                            ${testimonials.map((_, idx) => `
+                                <button onclick="state.activeTestimonial = ${idx}; state.lastManualChange = Date.now(); render();"
+                                    class="transition-all ${idx === state.activeTestimonial ? 'w-8 h-2 bg-rose-500' : 'w-2 h-2 bg-stone-600 hover:bg-stone-500'} rounded-full"></button>
+                            `).join('')}
+                        </div>
+
+                        <div class="flex justify-center gap-4 mt-6">
+                            <button onclick="state.activeTestimonial = (state.activeTestimonial - 1 + 6) % 6; state.lastManualChange = Date.now(); render();"
+                                class="text-stone-400 hover:text-white transition-colors">
+                                <i data-lucide="chevron-left" class="w-8 h-8"></i>
+                            </button>
+                            <button onclick="state.activeTestimonial = (state.activeTestimonial + 1) % 6; state.lastManualChange = Date.now(); render();"
+                                class="text-stone-400 hover:text-white transition-colors">
+                                <i data-lucide="chevron-right" class="w-8 h-8"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -359,113 +448,20 @@
             </section>`;
         }
 
-        function renderTestimonials() {
-            const testimonials = [
-                {
-                    name: "Carolina M.",
-                    role: "Foodie & Content Creator",
-                    text: "Como creadora de contenido gastronómico, visito restaurantes constantemente. Antes gastaba fortunas. Ahora con el PASS ceno en los mejores lugares y además ahorro para viajes.",
-                    highlight: "Ahorro real: $6.500/mes",
-                    avatar: "🍽️"
-                },
-                {
-                    name: "Rodrigo P.",
-                    role: "Sommelier",
-                    text: "Pensé que los descuentos eran solo para vinos básicos. Me sorprendí cuando pude acceder a degustaciones premium de bodegas boutique con 2x1. Amplió mi red profesional.",
-                    highlight: "Acceso a bodegas exclusivas",
-                    avatar: "🍷"
-                },
-                {
-                    name: "Lucía & Martín",
-                    role: "Pareja joven sin tarjeta",
-                    text: "No tenemos tarjetas de crédito pero queremos salir bien. El PASS nos cambió la vida: pagamos una vez al mes y disfrutamos sin culpa. Ya fuimos a 8 lugares este mes.",
-                    highlight: "Sin depender de crédito",
-                    avatar: "💑"
-                },
-                {
-                    name: "Paula S.",
-                    role: "Emprendedora",
-                    text: "Uso el PASS para reuniones de negocio. Mis clientes quedan impresionados con los lugares, yo ahorro en gastos de representación. Win-win total.",
-                    highlight: "Networking inteligente",
-                    avatar: "💼"
-                },
-                {
-                    name: "Diego R.",
-                    role: "Dueño de Restaurante",
-                    text: "Al principio dudé, pero WinesOf PASS me trajo clientes nuevos que nunca hubieran entrado. Muchos vuelven sin el descuento. Es fidelización real, no descuentos vacíos.",
-                    highlight: "150+ clientes nuevos/mes",
-                    avatar: "👨‍🍳"
-                },
-                {
-                    name: "Fernanda L.",
-                    role: "Mamá de 2",
-                    text: "Con dos niños, salir es un lujo. El PASS nos permite una cita mensual en lugares lindos sin que duela el bolsillo. Lo mejor: también hay opciones para ir en familia.",
-                    highlight: "Calidad de vida",
-                    avatar: "👨‍👩‍👧‍👦"
-                }
-            ];
-
-            const current = testimonials[state.activeTestimonial];
-
-            return `
-            <section class="py-20 px-4">
-                <div class="max-w-5xl mx-auto">
-                    <h2 class="text-3xl md:text-4xl font-bold text-white text-center mb-4">
-                        Historias reales de nuestros miembros
-                    </h2>
-                    <p class="text-stone-400 text-center mb-12">Diferentes perfiles, mismo resultado: más experiencias, menos gasto</p>
-                    
-                    <div class="relative">
-                        <div class="bg-gradient-to-br from-neutral-900/90 to-stone-900/90 rounded-2xl p-8 md:p-12 border border-rose-700/30 backdrop-blur-sm min-h-[320px] flex flex-col justify-center">
-                            <div class="flex items-start gap-4 mb-6">
-                                <div class="text-5xl flex-shrink-0">${current.avatar}</div>
-                                <div>
-                                    <h3 class="text-white font-bold text-xl mb-1">${current.name}</h3>
-                                    <p class="text-rose-400 text-sm font-medium">${current.role}</p>
-                                </div>
-                            </div>
-                            
-                            <p class="text-stone-200 text-lg md:text-xl leading-relaxed mb-6 italic">
-                                "${current.text}"
-                            </p>
-                            
-                            <div class="inline-flex items-center gap-2 bg-rose-700/20 border border-rose-600/30 rounded-full px-4 py-2 self-start">
-                                <i data-lucide="check-circle" class="w-4 h-4 text-rose-400"></i>
-                                <span class="text-rose-300 text-sm font-semibold">${current.highlight}</span>
-                            </div>
-                        </div>
-
-                        <div class="flex justify-center gap-2 mt-8">
-                            ${testimonials.map((_, idx) => `
-                                <button
-                                    onclick="state.activeTestimonial = ${idx}; render();"
-                                    class="transition-all ${idx === state.activeTestimonial ? 'w-8 h-2 bg-rose-500' : 'w-2 h-2 bg-stone-600 hover:bg-stone-500'} rounded-full"
-                                ></button>
-                            `).join('')}
-                        </div>
-
-                        <div class="flex justify-center gap-4 mt-6">
-                            <button 
-                                onclick="state.activeTestimonial = (state.activeTestimonial - 1 + ${testimonials.length}) % ${testimonials.length}; render();"
-                                class="text-stone-400 hover:text-white transition-colors">
-                                <i data-lucide="chevron-left" class="w-8 h-8"></i>
-                            </button>
-                            <button 
-                                onclick="state.activeTestimonial = (state.activeTestimonial + 1) % ${testimonials.length}; render();"
-                                class="text-stone-400 hover:text-white transition-colors">
-                                <i data-lucide="chevron-right" class="w-8 h-8"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </section>`;
-        }
-
         function renderPricing() {
+            const c = state.currency;
+            const mp = state.isUruguay ? '615' : '15';
+            const sp = state.isUruguay ? '3.075' : '75';
+            const so = state.isUruguay ? '3.690' : '90';
+            const ss = state.isUruguay ? '615' : '15';
+            const ap = state.isUruguay ? '6.150' : '150';
+            const ao = state.isUruguay ? '7.380' : '180';
+            const as = state.isUruguay ? '1.230' : '30';
+            
             const plans = [
-                { name: 'Mensual', price: '615', period: '/mes', popular: false, savings: 'Probá sin compromiso', features: ['Todos los descuentos', 'Sin permanencia', 'Acceso inmediato', 'App móvil'], value: 'mensual' },
-                { name: 'Semestral', price: '3.075', originalPrice: '3.690', period: '/6 meses', popular: true, savings: '1 mes GRATIS - Ahorrás $615', discount: '1 MES GRATIS', features: ['Todos los descuentos', 'Evento exclusivo', 'Prioridad reservas', 'App móvil', 'Regalo bienvenida'], value: 'semestral' },
-                { name: 'Anual', price: '6.150', originalPrice: '7.380', period: '/año', popular: false, savings: '2 meses GRATIS - Ahorrás $1.230', discount: '2 MESES GRATIS', features: ['Todos los descuentos', '3 eventos exclusivos', 'Máxima prioridad', 'App móvil', 'Pack premium', 'Upgrades gratis'], value: 'anual' }
+                { name: 'Mensual', price: mp, period: '/mes', popular: false, savings: 'Probá sin compromiso', features: ['Todos los descuentos', 'Sin permanencia', 'Acceso inmediato', 'App móvil'], value: 'mensual' },
+                { name: 'Semestral', price: sp, originalPrice: so, period: '/6 meses', popular: true, savings: `1 mes GRATIS - Ahorrás ${c}${ss}`, discount: '1 MES GRATIS', features: ['Todos los descuentos', 'Evento exclusivo', 'Prioridad reservas', 'App móvil', 'Regalo bienvenida'], value: 'semestral' },
+                { name: 'Anual', price: ap, originalPrice: ao, period: '/año', popular: false, savings: `2 meses GRATIS - Ahorrás ${c}${as}`, discount: '2 MESES GRATIS', features: ['Todos los descuentos', '3 eventos exclusivos', 'Máxima prioridad', 'App móvil', 'Pack premium', 'Upgrades gratis'], value: 'anual' }
             ];
             
             return `
@@ -485,9 +481,9 @@
                             </div>
                             <h3 class="text-2xl font-bold text-white mb-2">${plan.name}</h3>
                             <div class="mb-4">
-                                <span class="text-5xl font-bold text-white">$${plan.price}</span>
+                                <span class="text-5xl font-bold text-white">${c}${plan.price}</span>
                                 <span class="text-stone-400">${plan.period}</span>
-                                ${plan.originalPrice ? `<div class="mt-1"><span class="text-stone-500 line-through text-sm">$${plan.originalPrice}</span></div>` : ''}
+                                ${plan.originalPrice ? `<div class="mt-1"><span class="text-stone-500 line-through text-sm">${c}${plan.originalPrice}</span></div>` : ''}
                             </div>
                             <div class="bg-rose-700/20 border border-rose-600/30 rounded-lg px-3 py-2 mb-6">
                                 <p class="text-rose-300 font-semibold text-sm">${plan.savings}</p>
@@ -527,7 +523,7 @@
                 <div class="max-w-3xl mx-auto">
                     <h2 class="text-3xl md:text-4xl font-bold text-white text-center mb-12">Preguntas frecuentes</h2>
                     <div class="space-y-4">
-                        ${faqs.map((faq, i) => `
+                        ${faqs.map(faq => `
                         <details class="bg-stone-800/50 rounded-xl p-6 border border-stone-700 hover:border-rose-600/50 transition-all">
                             <summary class="text-white font-semibold cursor-pointer">${faq.q}</summary>
                             <p class="text-stone-300 mt-3">${faq.a}</p>
@@ -564,28 +560,6 @@
             </footer>`;
         }
 
-        function attachEventListeners() {
-            const nameInput = document.getElementById('input-name');
-            const emailInput = document.getElementById('input-email');
-            const phoneInput = document.getElementById('input-phone');
-            const planInput = document.getElementById('input-plan');
-
-            if (nameInput) nameInput.addEventListener('input', (e) => updateFormData('name', e.target.value));
-            if (emailInput) emailInput.addEventListener('input', (e) => updateFormData('email', e.target.value));
-            if (phoneInput) phoneInput.addEventListener('input', (e) => updateFormData('phone', e.target.value));
-            if (planInput) planInput.addEventListener('change', (e) => updateFormData('plan', e.target.value));
-
-            if (nameInput || emailInput) {
-                [nameInput, emailInput].forEach(input => {
-                    if (input) {
-                        input.addEventListener('keypress', (e) => {
-                            if (e.key === 'Enter') handleSubmit();
-                        });
-                    }
-                });
-            }
-        }
-
         window.addEventListener('scroll', () => {
             const newScrolled = window.scrollY > 50;
             if (newScrolled !== state.scrolled) {
@@ -597,22 +571,34 @@
         setInterval(() => {
             if (Math.random() > 0.7) {
                 state.waitlistCount++;
-                if (state.scrolled || document.querySelector('.animate-pulse-soft')) {
-                    render();
-                }
             }
         }, 45000);
 
-        // Auto-rotate testimonials
-        setInterval(() => {
-            const testimonialSection = document.querySelector('section:has(.bg-gradient-to-br.from-neutral-900\\/90)');
-            if (testimonialSection) {
-                state.activeTestimonial = (state.activeTestimonial + 1) % 6;
-                render();
-            }
-        }, 5000);
+        const testimonialReadTimes = [8000, 9000, 9000, 7000, 9000, 8000];
+        let testimonialTimer;
 
-        render();
+        function startTestimonialRotation() {
+            if (testimonialTimer) clearTimeout(testimonialTimer);
+            
+            const currentReadTime = testimonialReadTimes[state.activeTestimonial];
+            
+            testimonialTimer = setTimeout(() => {
+                const timeSinceManualChange = Date.now() - state.lastManualChange;
+                if (timeSinceManualChange > 3000) {
+                    state.activeTestimonial = (state.activeTestimonial + 1) % 6;
+                    render();
+                }
+                startTestimonialRotation();
+            }, currentReadTime);
+        }
+
+        async function init() {
+            await detectCountry();
+            render();
+            startTestimonialRotation();
+        }
+
+        init();
     </script>
 </body>
 </html>
