@@ -43,7 +43,18 @@
       50% { opacity: .75; }
     }
     .animate-pulse-soft { animation: pulse-soft 2s cubic-bezier(.4,0,.6,1) infinite; }
-  </style>
+  
+/* MOBILE INPUT / MODAL FIXES */
+@media (max-width: 768px) {
+  /* Keep modal content visible above mobile keyboards */
+  .modal-backdrop { align-items: flex-start !important; padding-top: 10vh !important; }
+  .modal-content { max-height: calc(100vh - 14vh); overflow:auto; -webkit-overflow-scrolling: touch; margin-top: 4vh; }
+  /* Avoid iOS zoom & caret jump by ensuring inputs are at least 16px */
+  input, textarea, select { font-size: 16px !important; }
+  /* Add a bit of bottom padding to body when inputs are focused (avoid footer overlap) */
+  body.input-focused { padding-bottom: 28vh !important; }
+}
+</style>
 </head>
 <body class="bg-gradient-to-br from-neutral-950 via-stone-950 to-neutral-950 text-white">
   <div id="app"></div>
@@ -483,5 +494,84 @@
       init();
     })();
   </script>
+<script>
+
+// MOBILE INPUT FOCUS HELPERS
+(function(){
+  function onFocus(e){
+    // small delay gives browser time to open the keyboard
+    setTimeout(function(){
+      try { e.target.scrollIntoView({behavior:'smooth', block:'center'}); } catch(e){}
+      document.body.classList.add('input-focused');
+    }, 300);
+  }
+  function onBlur(){ document.body.classList.remove('input-focused'); }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    var els = document.querySelectorAll('input, textarea, select');
+    els.forEach(function(el){
+      el.addEventListener('focus', onFocus);
+      el.addEventListener('blur', onBlur);
+      // prevent iOS zoom by forcing font-size 16 (already in CSS)
+    });
+
+    // Special case: when modal opens, if on mobile, scroll modal-content into view
+    var observer = new MutationObserver(function(mutations){
+      mutations.forEach(function(m){
+        if (m.addedNodes && m.addedNodes.length){
+          m.addedNodes.forEach(function(node){
+            if (node.classList && node.classList.contains('modal-backdrop')){
+              if (window.innerWidth <= 768){
+                // ensure modal is visible
+                setTimeout(function(){
+                  var mc = node.querySelector('.modal-content');
+                  if (mc) mc.scrollIntoView({behavior:'smooth', block:'center'});
+                }, 250);
+              }
+            }
+          });
+        }
+      });
+    });
+    observer.observe(document.body, {childList:true});
+  });
+})();
+
+
+// TESTIMONIALS ROTATOR
+(function(){
+  var testimonials = [
+    { text: "Con PASS me animé a visitar bodegas que no conocía. Los descuentos son reales y el proceso fue simple.", author: "— Lucas, aficionado al vino" },
+    { text: "Reservé una cena con descuento y la experiencia fue impecable. Recomendado para quienes salen a comer seguido.", author: "— Mariana, comunicadora gastronómica" },
+    { text: "Muy buena atención al partner y notificaciones claras. El ahorro es visible en pocas salidas.", author: "— Fernando, dueño de vinoteca" },
+    { text: "La prueba gratis me permitió comprobar el valor antes de pagar. Me quedé con el plan semestral.", author: "— Valentina, turista gastronómica" }
+  ];
+  var idx = 0;
+  function show(i){
+    idx = (i + testimonials.length) % testimonials.length;
+    var t = testimonials[idx];
+    var txt = document.getElementById('testimonial-text');
+    var auth = document.getElementById('testimonial-author');
+    var dots = document.getElementById('testimonial-dots');
+    if (txt) txt.textContent = t.text;
+    if (auth) auth.textContent = t.author;
+    if (dots){
+      dots.innerHTML = '';
+      testimonials.forEach(function(_, j){
+        var d = document.createElement('span');
+        d.className = 'w-2 h-2 rounded-full ' + (j===idx ? 'bg-rose-500' : 'bg-stone-600');
+        dots.appendChild(d);
+      });
+    }
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    show(0);
+    document.getElementById('next-testimonial').addEventListener('click', function(){ show(idx+1); });
+    document.getElementById('prev-testimonial').addEventListener('click', function(){ show(idx-1); });
+    setInterval(function(){ show(idx+1); }, 5500);
+  });
+})();
+
+</script>
 </body>
 </html>
