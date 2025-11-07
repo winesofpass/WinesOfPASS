@@ -54,6 +54,16 @@
   /* Add a bit of bottom padding to body when inputs are focused (avoid footer overlap) */
   body.input-focused { padding-bottom: 28vh !important; }
 }
+
+/* Testimonial avatar circle */
+.test-avatar {
+  width:48px; height:48px; border-radius:9999px; display:inline-flex; align-items:center; justify-content:center; font-weight:700;
+  background: linear-gradient(135deg, rgba(244,63,94,0.15), rgba(220,38,70,0.15)); color:#fff; border:2px solid rgba(255,255,255,0.06);
+}
+@media (max-width:768px){
+  .test-avatar { width:40px; height:40px; font-size:14px; }
+  #testimonial-text { font-size:15px; }
+}
 </style>
 </head>
 <body class="bg-gradient-to-br from-neutral-950 via-stone-950 to-neutral-950 text-white">
@@ -270,14 +280,17 @@
 
       app.innerHTML = `
         ${state.scrolled ? `
-        <div class="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-rose-700 to-red-700 p-4 z-40 shadow-2xl">
-          <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div class="text-white text-center sm:text-left">
-              <p class="font-bold">🎁 2 meses gratis — ${state.waitlistCount} personas ya se anotaron</p>
-              <p class="text-sm text-orange-100">Acceso por tandas · Reservá tu lugar</p>
+        <div class="fixed bottom-6 right-4 z-[1000]">
+          <div id="floating-pill" class="bg-gradient-to-r from-rose-700 to-red-700 text-white rounded-full shadow-2xl p-2 flex items-center gap-3 max-w-[320px] min-w-[220px]">
+            <div class="px-4 py-3">
+              <div class="font-bold text-sm">🎁 2 meses gratis — ${state.waitlistCount} personas</div>
+              <div class="text-xs text-rose-100">Reservá tu lugar · Sin tarjeta</div>
             </div>
-            <button class="open-modal bg-white text-rose-700 px-6 py-3 rounded-full font-bold hover:scale-105 transition-transform shadow-lg" data-plan="semestral" data-location="sticky">
-              Activar prueba gratis
+            <button class="open-modal ml-2 mr-1 bg-white text-rose-700 rounded-full px-4 py-2 font-semibold shadow" data-plan="semestral" data-location="floating">
+              Activar
+            </button>
+            <button id="close-floating" class="ml-2 mr-1 text-white/80 hover:text-white px-3 py-2" aria-label="Cerrar">
+              ✕
             </button>
           </div>
         </div>` : ''}
@@ -548,6 +561,9 @@
   ];
   var idx = 0;
   function show(i){
+    // update avatar initials
+    function initials(name){ try{ return name.split(' ')[1] ? name.split(' ')[1].charAt(0).toUpperCase() + name.split(' ')[0].charAt(0).toUpperCase() : name.slice(1,3).toUpperCase(); }catch(e){return 'WF'} }
+
     idx = (i + testimonials.length) % testimonials.length;
     var t = testimonials[idx];
     var txt = document.getElementById('testimonial-text');
@@ -555,6 +571,7 @@
     var dots = document.getElementById('testimonial-dots');
     if (txt) txt.textContent = t.text;
     if (auth) auth.textContent = t.author;
+    var av = document.getElementById('testimonial-avatar'); if (av) av.textContent = (t.author||'').split(' ')[1] ? (t.author.split(' ')[1].charAt(1) || t.author.split(' ')[1].charAt(0)).toUpperCase() + (t.author.split(' ')[0].charAt(1) || t.author.split(' ')[0].charAt(0)).toUpperCase() : (t.author||'').slice(1,3).toUpperCase();
     if (dots){
       dots.innerHTML = '';
       testimonials.forEach(function(_, j){
@@ -571,6 +588,48 @@
     setInterval(function(){ show(idx+1); }, 5500);
   });
 })();
+
+</script>
+<script>
+
+// Floating pill close handler (persists dismissal for 6 hours)
+document.addEventListener('click', function(e){
+  var p = document.getElementById('floating-pill');
+  if (!p) return;
+  if (e.target && e.target.id === 'close-floating') {
+    p.style.display = 'none';
+    try { localStorage.setItem('winesof_floating_dismiss', Date.now().toString()); } catch(e) {}
+  }
+});
+
+// On load, auto-hide floating pill if dismissed recently (6 hours)
+(function(){
+  try {
+    var t = localStorage.getItem('winesof_floating_dismiss');
+    if (t) {
+      var diff = Date.now() - parseInt(t,10);
+      if (diff < 1000 * 60 * 60 * 6) { // 6 hours
+        var p = document.getElementById('floating-pill');
+        if (p) p.style.display = 'none';
+      }
+    }
+  } catch(e){}
+})();
+
+</script>
+<script>
+
+// Ensure modal-backdrop gets very high z-index to overlay floating pill
+var moObs = new MutationObserver(function(muts){
+  muts.forEach(function(m){
+    m.addedNodes.forEach(function(n){
+      if (n && n.classList && n.classList.contains('modal-backdrop')){
+        n.style.zIndex = 2000;
+      }
+    });
+  });
+});
+moObs.observe(document.body, {childList:true});
 
 </script>
 </body>
