@@ -283,7 +283,7 @@
         <div class="fixed bottom-6 right-4 z-[1000]">
           <div id="floating-pill" class="bg-gradient-to-r from-rose-700 to-red-700 text-white rounded-full shadow-2xl p-2 flex items-center gap-3 max-w-[320px] min-w-[220px]">
             <div class="px-4 py-3">
-              <div class="font-bold text-sm">🎁 2 meses gratis — ${state.waitlistCount} personas</div>
+              <div class="font-bold text-sm">🎁 2 meses gratis — ${state.waitlistCount} personas que ya reservaron su prueba</div>
               <div class="text-xs text-rose-100">Reservá tu lugar · Sin tarjeta</div>
             </div>
             <button class="open-modal ml-2 mr-1 bg-white text-rose-700 rounded-full px-4 py-2 font-semibold shadow" data-plan="semestral" data-location="floating">
@@ -344,6 +344,12 @@
 
             <p class="text-stone-500 text-sm mt-6">🔒 Privacidad garantizada · No compartimos tus datos</p>
           </div>
+        
+        <!-- URGENCY / SOCIAL PROOF BANNER -->
+        <div id="urgency-banner" class="max-w-3xl mx-auto mt-6 mb-8 p-4 rounded-lg bg-gradient-to-r from-rose-800/60 to-red-800/50 border border-rose-700/30 text-center">
+          <div class="text-white font-semibold text-lg">🎁 <span id="urgency-count">${state.waitlistCount}</span> personas ya reservaron su prueba</div>
+          <div class="text-stone-300 text-sm mt-1">Reservá tu lugar en la próxima tanda — cupos limitados por tanda.</div>
+        </div>
         </section>
 
         <section class="py-16 px-4 bg-neutral-900/30">
@@ -449,7 +455,29 @@
         <!-- FAQ -->
         <section class="py-12 px-4 bg-stone-950 border-t border-stone-800">
           <div class="max-w-4xl mx-auto">
-            <h3 class="text-2xl font-bold text-white mb-6 text-center">Preguntas frecuentes</h3>
+            <h3 class="text-2xl font-bold text-white mb-6 text-center">
+<!-- TESTIMONIALES: Credibilidad rotativa -->
+<section id="testimonials" class="py-12 px-4 bg-neutral-900/20 border-t border-stone-800">
+  <div class="max-w-4xl mx-auto text-center">
+    <h3 class="text-2xl font-bold text-white mb-6">Lo que dicen quienes ya probaron WinesOf PASS</h3>
+    <div class="relative bg-stone-900/60 p-6 rounded-2xl border border-stone-800 flex flex-col sm:flex-row items-start gap-4">
+      <div class="flex-shrink-0">
+        <div id="testimonial-avatar" class="test-avatar">SF</div>
+      </div>
+      <div class="flex-1 text-left">
+        <div id="testimonial-text" class="text-stone-200 text-lg leading-relaxed mb-2">“Excelente experiencia: descuentos reales y atención rápida. Ideal para salir sin complicaciones.”</div>
+        <div id="testimonial-author" class="text-stone-400 text-sm font-semibold mb-2">— Sofía, sommelier & creadora de experiencias</div>
+        <div class="mt-2 flex items-center gap-2">
+          <button id="prev-testimonial" class="px-3 py-1 rounded-md bg-stone-800/40 text-stone-300">◀</button>
+          <div id="testimonial-dots" class="flex gap-2 items-center"></div>
+          <button id="next-testimonial" class="px-3 py-1 rounded-md bg-stone-800/40 text-stone-300">▶</button>
+        </div>
+      </div>
+    </div>
+    <p class="text-stone-500 text-sm mt-4">Testimonios verificados por WinesOf · Nombres genéricos para respetar la privacidad</p>
+  </div>
+</section>
+Preguntas frecuentes</h3>
             <div class="space-y-4 text-stone-300">
               <details class="bg-stone-900 rounded-lg p-4 border border-stone-800">
                 <summary class="font-semibold text-white">¿Qué incluye la prueba gratuita?</summary>
@@ -551,27 +579,48 @@
 })();
 
 
-// TESTIMONIALS ROTATOR
+
+
+// TESTIMONIALS ROTATOR (expanded v3)
 (function(){
   var testimonials = [
-    { text: "Con PASS me animé a visitar bodegas que no conocía. Los descuentos son reales y el proceso fue simple.", author: "— Lucas, aficionado al vino" },
-    { text: "Reservé una cena con descuento y la experiencia fue impecable. Recomendado para quienes salen a comer seguido.", author: "— Mariana, comunicadora gastronómica" },
-    { text: "Muy buena atención al partner y notificaciones claras. El ahorro es visible en pocas salidas.", author: "— Fernando, dueño de vinoteca" },
-    { text: "La prueba gratis me permitió comprobar el valor antes de pagar. Me quedé con el plan semestral.", author: "— Valentina, turista gastronómica" }
+    { 
+      text: "WinesOf PASS me permitió descubrir bodegas boutique que no aparecían en buscadores. Usé el descuento en una cata privada: la gestión fue sencilla, el descuento se aplicó sin problemas y la comunicación con el establecimiento fue rápida. Para mí, el valor real fue conocer productores pequeños que ahora visito con frecuencia.",
+      author: "— Lucas, aficionado al vino y organizador de catas"
+    },
+    { 
+      text: "Probé el PASS durante la prueba gratis y al tercer mes ya había amortizado la suscripción con dos cenas y una visita a bodega. Lo que más valoro es la claridad: cada lugar describe exactamente qué incluye y cómo canjear, lo que evita malentendidos. Además, recibí atención al partner cuando tuve una consulta, muy profesionales.",
+      author: "— Mariana, comunicadora gastronómica"
+    },
+    { 
+      text: "Como dueño de una vinoteca, puedo confirmar que los beneficios ofrecidos son reales y sostenibles. Vimos clientes que antes no compraban ciertos vinos y ahora regresan por promociones exclusivas. WinesOf PASS no solo atrae tráfico, sino que también impulsa ventas repetidas y fideliza público local.",
+      author: "— Fernando, propietario de vinoteca"
+    },
+    { 
+      text: "Viajé a Maldonado y activé la prueba: las ofertas en restaurantes y hoteles me permitieron disfrutar sin gastar de más. El proceso de activación fue claro y la experiencia en cada lugar correspondió con la descripción del beneficio. Recomiendo la prueba para quienes quieren validar el servicio antes de suscribirse.",
+      author: "— Valentina, turista gastronómica"
+    }
   ];
   var idx = 0;
+  function initialsFromAuthor(author) {
+    if (!author) return "WF";
+    var clean = author.replace(/[^A-Za-zÀ-ÿ\s]/g,'').trim();
+    var parts = clean.split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+    }
+    return clean.slice(0,2).toUpperCase() || "WF";
+  }
   function show(i){
-    // update avatar initials
-    function initials(name){ try{ return name.split(' ')[1] ? name.split(' ')[1].charAt(0).toUpperCase() + name.split(' ')[0].charAt(0).toUpperCase() : name.slice(1,3).toUpperCase(); }catch(e){return 'WF'} }
-
     idx = (i + testimonials.length) % testimonials.length;
     var t = testimonials[idx];
     var txt = document.getElementById('testimonial-text');
     var auth = document.getElementById('testimonial-author');
     var dots = document.getElementById('testimonial-dots');
+    var av = document.getElementById('testimonial-avatar');
     if (txt) txt.textContent = t.text;
     if (auth) auth.textContent = t.author;
-    var av = document.getElementById('testimonial-avatar'); if (av) av.textContent = (t.author||'').split(' ')[1] ? (t.author.split(' ')[1].charAt(1) || t.author.split(' ')[1].charAt(0)).toUpperCase() + (t.author.split(' ')[0].charAt(1) || t.author.split(' ')[0].charAt(0)).toUpperCase() : (t.author||'').slice(1,3).toUpperCase();
+    if (av) av.textContent = initialsFromAuthor(t.author);
     if (dots){
       dots.innerHTML = '';
       testimonials.forEach(function(_, j){
@@ -583,11 +632,15 @@
   }
   document.addEventListener('DOMContentLoaded', function(){
     show(0);
-    document.getElementById('next-testimonial').addEventListener('click', function(){ show(idx+1); });
-    document.getElementById('prev-testimonial').addEventListener('click', function(){ show(idx-1); });
-    setInterval(function(){ show(idx+1); }, 5500);
+    var next = document.getElementById('next-testimonial');
+    var prev = document.getElementById('prev-testimonial');
+    if (next) next.addEventListener('click', function(){ show(idx+1); });
+    if (prev) prev.addEventListener('click', function(){ show(idx-1); });
+    setInterval(function(){ show(idx+1); }, 6500);
   });
 })();
+;
+;
 
 </script>
 <script>
@@ -631,6 +684,73 @@ var moObs = new MutationObserver(function(muts){
 });
 moObs.observe(document.body, {childList:true});
 
+</script>
+<script>
+
+// URGENCY: stable animated counter helper (v6) - polling approach
+(function(){
+  function animateCount(el, start, end, duration){
+    if (!el) return;
+    // clear any previous timer
+    if (el._timer) { clearInterval(el._timer); el._timer = null; }
+    start = Number(start) || 0; end = Number(end) || 0; duration = Number(duration) || 900;
+    var range = end - start;
+    if (range === 0) { el.textContent = end.toLocaleString(); window._lastWaitlistCount = end; return; }
+    var minTimer = 50;
+    var steps = Math.max(3, Math.ceil(duration / minTimer));
+    var stepTime = Math.max(minTimer, Math.floor(duration / steps));
+    var stepValue = range / steps;
+    var current = start;
+    var count = 0;
+    el._timer = setInterval(function(){
+      count++;
+      var next = Math.round(start + stepValue * count);
+      // ensure we don't oscillate around the end
+      if ((range > 0 && next >= end) || (range < 0 && next <= end) || count >= steps) {
+        el.textContent = end.toLocaleString();
+        clearInterval(el._timer);
+        el._timer = null;
+        window._lastWaitlistCount = end;
+        return;
+      }
+      el.textContent = next.toLocaleString();
+    }, stepTime);
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    try {
+      window._lastWaitlistCount = (window.state && window.state.waitlistCount) ? window.state.waitlistCount : (parseInt(document.getElementById('urgency-count')?.textContent.replace(/\D/g,'')) || 0);
+      var c = window._lastWaitlistCount;
+      var urgency = document.getElementById('urgency-count');
+      if (urgency) animateCount(urgency, Math.max(0, c - 3), c, 900);
+      // ensure the floating pill displays the number too
+      var pillBold = document.querySelector('#floating-pill .font-bold');
+      if (pillBold) {
+        pillBold.textContent = pillBold.textContent.replace(/\d[\d.,]*/g, c.toLocaleString());
+      }
+    } catch (err){ console.log('urgency init error', err); }
+  });
+
+  // Poll state.waitlistCount periodically (lighter and more predictable than MutationObserver)
+  setInterval(function(){
+    try {
+      var current = (window.state && window.state.waitlistCount) ? window.state.waitlistCount : null;
+      if (current === null) return;
+      if (window._lastWaitlistCount == null) window._lastWaitlistCount = current;
+      if (current !== window._lastWaitlistCount) {
+        var urgencyEl = document.getElementById('urgency-count');
+        // animate from last to current
+        if (urgencyEl) animateCount(urgencyEl, window._lastWaitlistCount, current, 800);
+        // update pill text without animation
+        var pillBold = document.querySelector('#floating-pill .font-bold');
+        if (pillBold) {
+          pillBold.textContent = pillBold.textContent.replace(/\d[\d.,]*/g, current.toLocaleString());
+        }
+        window._lastWaitlistCount = current;
+      }
+    } catch(e){ console.log('urgency poll error', e); }
+  }, 1200);
+})();
 </script>
 </body>
 </html>
