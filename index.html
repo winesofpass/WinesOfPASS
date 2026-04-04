@@ -471,12 +471,34 @@ async function detectCountry() {
 }
 
 async function sendToGoogleSheets(payload) {
-  await fetch(CONFIG.GOOGLE_SCRIPT_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
+  const body = JSON.stringify(payload);
+
+  if (navigator.sendBeacon) {
+    try {
+      const ok = navigator.sendBeacon(
+        CONFIG.GOOGLE_SCRIPT_URL,
+        new Blob([body], { type: 'text/plain;charset=UTF-8' })
+      );
+      if (ok) return;
+    } catch (e) {
+    }
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 12000);
+
+  try {
+    await fetch(CONFIG.GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+      body,
+      signal: controller.signal,
+      keepalive: true
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function validateForm() {
